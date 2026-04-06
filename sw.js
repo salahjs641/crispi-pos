@@ -1,5 +1,5 @@
 // Service Worker — enables offline mode and PWA install
-const CACHE_NAME = 'crispi-pos-v2';
+const CACHE_NAME = 'crispi-pos-v3';
 const ASSETS = [
     './',
     './index.html',

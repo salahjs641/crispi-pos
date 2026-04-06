@@ -61,21 +61,26 @@ const Orders = {
 
     // ===== NOTE / CUSTOMIZATION MODAL =====
     initNoteModal() {
-        document.getElementById('noteConfirm').addEventListener('click', () => this.saveNote());
-        document.getElementById('noteCancel').addEventListener('click', () => App.closeModal('noteModal'));
-        document.getElementById('noteInput').addEventListener('keydown', (e) => {
+        const noteConfirm = document.getElementById('noteConfirm');
+        const noteCancel = document.getElementById('noteCancel');
+        const noteInput = document.getElementById('noteInput');
+        const quickNotes = document.getElementById('quickNotes');
+        if (!noteConfirm || !noteCancel || !noteInput || !quickNotes) return;
+
+        noteConfirm.addEventListener('click', () => this.saveNote());
+        noteCancel.addEventListener('click', () => App.closeModal('noteModal'));
+        noteInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') this.saveNote();
         });
 
         // Quick note buttons
-        document.getElementById('quickNotes').addEventListener('click', (e) => {
+        quickNotes.addEventListener('click', (e) => {
             const btn = e.target.closest('.quick-note-btn');
             if (!btn) return;
-            const input = document.getElementById('noteInput');
-            const current = input.value.trim();
+            const current = noteInput.value.trim();
             const note = btn.dataset.note;
-            input.value = current ? current + ', ' + note : note;
-            input.focus();
+            noteInput.value = current ? current + ', ' + note : note;
+            noteInput.focus();
         });
     },
 

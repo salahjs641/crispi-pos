@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Crispi POS — Historique</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/log.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#e2b714">
+    <link rel="icon" href="img/icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="img/icon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- TOP BAR -->
+    <header class="top-bar">
+        <div class="top-bar-left">
+            <a href="index.html" class="back-btn" title="Retour au POS">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="19" y1="12" x2="5" y2="12"/>
+                    <polyline points="12 19 5 12 12 5"/>
+                </svg>
+            </a>
+            <h1 class="logo">Crispi</h1>
+        </div>
+        <div class="top-bar-center">
+            <div class="chiffre-affaires">
+                <span class="ca-label">CHIFFRE D'AFFAIRES:</span>
+                <span class="ca-value" id="chiffreAffaires">0.00 DH</span>
+            </div>
+        </div>
+        <div class="top-bar-right">
+            <span class="page-title">HISTORIQUE</span>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main class="log-content">
+        <!-- STATS BAR -->
+        <div class="stats-bar">
+            <div class="stat-card">
+                <span class="stat-label">Total Commandes</span>
+                <span class="stat-value" id="totalOrders">0</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">Commandes Aujourd'hui</span>
+                <span class="stat-value" id="todayOrders">0</span>
+            </div>
+            <div class="stat-card accent">
+                <span class="stat-label">Chiffre d'Affaires</span>
+                <span class="stat-value" id="totalRevenue">0.00 DH</span>
+            </div>
+        </div>
+
+        <!-- ORDERS TABLE -->
+        <div class="log-table-wrapper">
+            <table class="log-table">
+                <thead>
+                    <tr>
+                        <th>N°</th>
+                        <th>Date & Heure</th>
+                        <th>Articles</th>
+                        <th>Total</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="ordersTableBody">
+                    <!-- Rendered by JS -->
+                </tbody>
+            </table>
+            <div class="log-empty" id="logEmpty" style="display:none">
+                Aucune commande enregistrée.
+            </div>
+        </div>
+    </main>
+
+    <!-- PASSWORD MODAL -->
+    <div class="modal-overlay" id="passwordModal">
+        <div class="modal confirm-modal">
+            <div class="modal-header">
+                <h3>Suppression protégée</h3>
+                <button class="btn-close" data-close="passwordModal">&times;</button>
+            </div>
+            <div class="password-body">
+                <p>Entrez le mot de passe pour supprimer cette commande</p>
+                <input type="password" id="deletePassword" readonly placeholder="****" autocomplete="off">
+                <div class="numpad" id="passwordNumpad">
+                    <button class="numpad-btn" data-val="1">1</button>
+                    <button class="numpad-btn" data-val="2">2</button>
+                    <button class="numpad-btn" data-val="3">3</button>
+                    <button class="numpad-btn" data-val="4">4</button>
+                    <button class="numpad-btn" data-val="5">5</button>
+                    <button class="numpad-btn" data-val="6">6</button>
+                    <button class="numpad-btn" data-val="7">7</button>
+                    <button class="numpad-btn" data-val="8">8</button>
+                    <button class="numpad-btn" data-val="9">9</button>
+                    <button class="numpad-btn" data-val="C">C</button>
+                    <button class="numpad-btn" data-val="0">0</button>
+                    <button class="numpad-btn numpad-del" data-val="del">&larr;</button>
+                </div>
+                <div class="password-error" id="passwordError" style="display:none">Mot de passe incorrect</div>
+            </div>
+            <div class="form-actions">
+                <button class="btn btn-cancel" id="passwordCancel">Annuler</button>
+                <button class="btn btn-validate" id="passwordConfirm">Confirmer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST -->
+    <div class="toast" id="toast">
+        <span id="toastMessage"></span>
+    </div>
+
+    <!-- HIDDEN RECEIPT FOR PRINTING -->
+    <div id="receiptContainer" class="receipt-container">
+        <div id="receipt" class="receipt">
+            <!-- Filled by JS before printing -->
+        </div>
+    </div>
+
+    <script src="js/supabase-config.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/log.js"></script>
+</body>
+</html>

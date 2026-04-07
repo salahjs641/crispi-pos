@@ -223,6 +223,8 @@ const Orders = {
     },
 
     lastOrder: null,
+    _printQueue: [],    // queue for chained prints
+    _printing: false,   // flag to prevent overlapping prints
 
     confirmPayment() {
         const paid = parseFloat(document.getElementById('paymentAmount').value) || 0;
@@ -280,7 +282,7 @@ const Orders = {
 
         modal.innerHTML = `
             <div class="modal-header">
-                <h3>Commande validée</h3>
+                <h3>Commande validee</h3>
                 <button class="btn-close" id="successClose">&times;</button>
             </div>
             <div class="payment-body">
@@ -293,7 +295,7 @@ const Orders = {
                     <h4>Commande #${String(orderNumber).padStart(4, '0')}</h4>
                     <div class="payment-success-details">
                         <div class="detail-row"><span>Total:</span><span>${total.toFixed(2)} DH</span></div>
-                        ${paid > 0 ? `<div class="detail-row"><span>Reçu:</span><span>${paid.toFixed(2)} DH</span></div>` : ''}
+                        ${paid > 0 ? `<div class="detail-row"><span>Recu:</span><span>${paid.toFixed(2)} DH</span></div>` : ''}
                         ${changeHTML}
                     </div>
                     <div class="payment-success-actions">
@@ -303,7 +305,7 @@ const Orders = {
                                 <path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
                                 <rect x="6" y="14" width="12" height="8"/>
                             </svg>
-                            Imprimer
+                            Re-imprimer
                         </button>
                         <button class="btn btn-validate" id="successDone">Fermer</button>
                     </div>
@@ -315,6 +317,9 @@ const Orders = {
         document.getElementById('successClose').addEventListener('click', () => this.closeSuccess());
         document.getElementById('successDone').addEventListener('click', () => this.closeSuccess());
         document.getElementById('successPrint').addEventListener('click', () => this.printLastReceipt());
+
+        // AUTO-PRINT: send to both printers automatically
+        this.autoPrintDual(order);
     },
 
     closeSuccess() {
@@ -369,7 +374,13 @@ const Orders = {
         this.initPayment();
     },
 
-    // ===== DUAL TICKET PRINTING (Client + Kitchen) =====
+    // ===== PRINTER SETTINGS =====
+    getPrinterMode() {
+        // 'dual' = two separate printers, 'single' = one printer both tickets
+        return localStorage.getItem('crispi_printer_mode') || 'dual';
+    },
+
+    // ===== RECEIPT BUILDERS =====
     buildClientReceipt(order) {
         const date = new Date(order.timestamp);
         const dateStr = date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -441,17 +452,51 @@ const Orders = {
         `;
     },
 
+    // ===== AUTO DUAL PRINT (two separate print jobs) =====
+    autoPrintDual(order) {
+        const mode = this.getPrinterMode();
+
+        if (mode === 'single') {
+            // Single printer: both tickets in one print job with cut line
+            document.getElementById('receipt').innerHTML =
+                this.buildKitchenReceipt(order) +
+                '<div class="receipt-cut"></div>' +
+                this.buildClientReceipt(order);
+            setTimeout(() => window.print(), 300);
+            return;
+        }
+
+        // Dual printer mode: two separate print jobs
+        // Step 1: Print CUISINE ticket
+        document.getElementById('receipt').innerHTML = this.buildKitchenReceipt(order);
+
+        // Use a flag to chain the second print after the first dialog closes
+        this._pendingCaissePrint = order;
+
+        setTimeout(() => {
+            window.print();
+        }, 300);
+    },
+
+    // Called by the afterprint handler to send the second print job
+    _printCaisseTicket() {
+        const order = this._pendingCaissePrint;
+        if (!order) return;
+        this._pendingCaissePrint = null;
+
+        // Step 2: Print CAISSE (client) ticket
+        document.getElementById('receipt').innerHTML = this.buildClientReceipt(order);
+
+        setTimeout(() => {
+            window.print();
+        }, 500);
+    },
+
+    // Manual reprint (both tickets)
     printLastReceipt() {
         const order = this.lastOrder;
         if (!order) return;
-
-        // Print both tickets: kitchen first, then client
-        document.getElementById('receipt').innerHTML =
-            this.buildKitchenReceipt(order) +
-            '<div class="receipt-cut"></div>' +
-            this.buildClientReceipt(order);
-
-        setTimeout(() => window.print(), 200);
+        this.autoPrintDual(order);
     },
 
     cancel() {

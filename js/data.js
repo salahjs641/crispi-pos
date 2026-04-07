@@ -51,8 +51,17 @@ const DEFAULT_PRODUCTS = [
     { id: 'om-04', name: 'Omelette Avec Tomat', price: 20, category: 'omlet', image: PLACEHOLDER_IMG, position: 4 },
     { id: 'om-05', name: 'Omelette Dinde Fumé', price: 20, category: 'omlet', image: PLACEHOLDER_IMG, position: 5 },
 
+    // === FTOUR BELDI ===
+    { id: 'fb-01', name: 'Ftour Beldi', price: 25, category: 'ftour-beldi', image: PLACEHOLDER_IMG, position: 1 },
+
+    // === FTOUR FASSI ===
+    { id: 'ff-01', name: 'Ftour Fassi', price: 25, category: 'ftour-fassi', image: PLACEHOLDER_IMG, position: 1 },
+
     // === FTOUR CHAMALI ===
     { id: 'fc-01', name: 'Ftour Chamali', price: 30, category: 'ftour-chamali', image: PLACEHOLDER_IMG, position: 1 },
+
+    // === FTOUR EXPRESS ===
+    { id: 'fe-01', name: 'Ftour Express', price: 20, category: 'ftour-express', image: PLACEHOLDER_IMG, position: 1 },
 
     // === BOISSONS ===
     { id: 'bs-01', name: 'Jus d\'Orange', price: 14, category: 'boissons', image: PLACEHOLDER_IMG, position: 1 },

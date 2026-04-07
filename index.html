@@ -25,6 +25,13 @@
             </div>
         </div>
         <div class="top-bar-right">
+            <button class="btn-icon" id="btnPrinterSettings" title="Reglages Imprimantes">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="6 9 6 2 18 2 18 9"/>
+                    <path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                    <rect x="6" y="14" width="12" height="8"/>
+                </svg>
+            </button>
             <a href="log.html" class="btn-icon" id="btnHistory" title="Historique">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <circle cx="12" cy="12" r="10"/>
@@ -49,6 +56,12 @@
                     <line x1="5" y1="12" x2="19" y2="12"/>
                 </svg>
             </button>
+            <a href="admin.html" class="btn-icon btn-admin" id="btnAdmin" title="Mohamed Base">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                    <path d="M7 11V7a5 5 0 0110 0v4"/>
+                </svg>
+            </a>
             <div class="status-dot" id="statusDot" title="En ligne"></div>
         </div>
     </header>
@@ -265,6 +278,82 @@
             <div class="form-actions">
                 <button class="btn btn-cancel" id="confirmNo">Non</button>
                 <button class="btn btn-validate" id="confirmYes">Oui</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PRINTER SETTINGS MODAL -->
+    <div class="modal-overlay" id="printerModal">
+        <div class="modal printer-modal">
+            <div class="modal-header">
+                <h3>Reglages Imprimantes</h3>
+                <button class="btn-close" data-close="printerModal">&times;</button>
+            </div>
+            <div class="printer-body">
+                <div class="printer-mode-toggle">
+                    <label class="printer-mode-label">Mode d'impression:</label>
+                    <div class="printer-mode-options">
+                        <button class="printer-mode-btn active" data-mode="dual" id="modeDual">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="1" y="6" width="9" height="12" rx="1"/>
+                                <rect x="14" y="6" width="9" height="12" rx="1"/>
+                            </svg>
+                            2 Imprimantes
+                        </button>
+                        <button class="printer-mode-btn" data-mode="single" id="modeSingle">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="5" y="6" width="14" height="12" rx="1"/>
+                            </svg>
+                            1 Imprimante
+                        </button>
+                    </div>
+                </div>
+                <div class="printer-info" id="printerDualInfo">
+                    <div class="printer-card">
+                        <div class="printer-card-icon cuisine">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                                <path d="M2 17l10 5 10-5"/>
+                                <path d="M2 12l10 5 10-5"/>
+                            </svg>
+                        </div>
+                        <div class="printer-card-text">
+                            <strong>Imprimante 1 — CUISINE</strong>
+                            <p>Ticket cuisine (1er dialogue)</p>
+                        </div>
+                    </div>
+                    <div class="printer-card">
+                        <div class="printer-card-icon caisse">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="2" y="4" width="20" height="16" rx="2"/>
+                                <line x1="2" y1="10" x2="22" y2="10"/>
+                            </svg>
+                        </div>
+                        <div class="printer-card-text">
+                            <strong>Imprimante 2 — CAISSE</strong>
+                            <p>Ticket client (2eme dialogue)</p>
+                        </div>
+                    </div>
+                    <p class="printer-hint">Quand une commande est validee, 2 dialogues d'impression s'ouvrent automatiquement. Selectionnez la bonne imprimante pour chaque ticket.</p>
+                </div>
+                <div class="printer-info" id="printerSingleInfo" style="display:none">
+                    <div class="printer-card">
+                        <div class="printer-card-icon caisse">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="6 9 6 2 18 2 18 9"/>
+                                <path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                                <rect x="6" y="14" width="12" height="8"/>
+                            </svg>
+                        </div>
+                        <div class="printer-card-text">
+                            <strong>1 seule imprimante</strong>
+                            <p>Les 2 tickets (cuisine + client) sortent ensemble avec une ligne de coupe</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="form-actions" style="padding:0 20px 20px">
+                <button class="btn btn-validate" id="printerSave">OK</button>
             </div>
         </div>
     </div>

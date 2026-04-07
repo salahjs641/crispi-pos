@@ -11,6 +11,16 @@ const Log = {
         this.renderStats();
         this.renderTable();
         this.bindEvents();
+
+        // Chain second print job for dual printer mode
+        window.addEventListener('afterprint', () => {
+            if (this._pendingCaissePrint) {
+                const order = this._pendingCaissePrint;
+                this._pendingCaissePrint = null;
+                document.getElementById('receipt').innerHTML = this.buildClientReceipt(order);
+                setTimeout(() => window.print(), 500);
+            }
+        });
     },
 
     loadOrders() {
@@ -203,21 +213,12 @@ const Log = {
         this.showToast('Commande supprimée');
     },
 
-    // ===== PRINT RECEIPT (Dual: Kitchen + Client) =====
-    printReceipt(orderId) {
-        const order = this.orders.find(o => o.id === orderId);
-        if (!order) return;
+    // ===== PRINT RECEIPT (Dual printer support) =====
+    _pendingCaissePrint: null,
 
-        const date = new Date(order.timestamp);
-        const dateStr = date.toLocaleDateString('fr-FR', {
-            day: '2-digit', month: '2-digit', year: 'numeric'
-        });
-        const timeStr = date.toLocaleTimeString('fr-FR', {
-            hour: '2-digit', minute: '2-digit', second: '2-digit'
-        });
-
-        // Kitchen ticket (with prices)
-        const kitchenItemsRows = order.items.map(item => `
+    buildKitchenReceipt(order) {
+        const timeStr = new Date(order.timestamp).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+        const rows = order.items.map(item => `
             <tr>
                 <td class="item-qty">${item.quantity}x</td>
                 <td class="item-name"><strong>${item.name}</strong>${item.note ? `<br><span class="kitchen-note">** ${item.note} **</span>` : ''}</td>
@@ -225,27 +226,24 @@ const Log = {
             </tr>
         `).join('');
 
-        const kitchenHTML = `
-            <div class="receipt-header">
-                <h2>-- CUISINE --</h2>
-            </div>
+        return `
+            <div class="receipt-header"><h2>-- CUISINE --</h2></div>
             <hr class="receipt-separator">
             <div class="receipt-info" style="text-align:center;">
-                <strong style="font-size:16px;">Commande #${String(order.orderNumber).padStart(4, '0')}</strong><br>
-                ${timeStr}
+                <strong style="font-size:16px;">Commande #${String(order.orderNumber).padStart(4, '0')}</strong><br>${timeStr}
             </div>
             <hr class="receipt-separator">
-            <table class="receipt-items">
-                ${kitchenItemsRows}
-            </table>
-            <div class="receipt-total">
-                TOTAL: ${order.total.toFixed(2)} DH
-            </div>
+            <table class="receipt-items">${rows}</table>
+            <div class="receipt-total">TOTAL: ${order.total.toFixed(2)} DH</div>
             <hr class="receipt-separator">
         `;
+    },
 
-        // Client ticket (with prices)
-        const clientItems = order.items.map(item => `
+    buildClientReceipt(order) {
+        const date = new Date(order.timestamp);
+        const dateStr = date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        const timeStr = date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        const rows = order.items.map(item => `
             <tr>
                 <td class="item-qty">${item.quantity}x</td>
                 <td class="item-name">${item.name}${item.note ? `<br><small class="item-note">${item.note}</small>` : ''}</td>
@@ -253,37 +251,39 @@ const Log = {
             </tr>
         `).join('');
 
-        const clientHTML = `
-            <div class="receipt-header">
-                <h2>CRISPI</h2>
-                <p>Restaurant</p>
-                <p>Tel: 06 04 08 49 17</p>
-            </div>
+        return `
+            <div class="receipt-header"><h2>CRISPI</h2><p>Restaurant</p><p>Tel: 06 04 08 49 17</p></div>
             <hr class="receipt-separator">
             <div class="receipt-info">
-                <strong>Commande #${String(order.orderNumber).padStart(4, '0')}</strong><br>
-                Date: ${dateStr} ${timeStr}
+                <strong>Commande #${String(order.orderNumber).padStart(4, '0')}</strong><br>Date: ${dateStr} ${timeStr}
             </div>
             <hr class="receipt-separator">
-            <table class="receipt-items">
-                ${clientItems}
-            </table>
-            <div class="receipt-total">
-                TOTAL: ${order.total.toFixed(2)} DH
-            </div>
+            <table class="receipt-items">${rows}</table>
+            <div class="receipt-total">TOTAL: ${order.total.toFixed(2)} DH</div>
             <hr class="receipt-separator">
-            <div class="receipt-footer">
-                <p><strong>Merci et bon appetit!</strong></p>
-                <p>A bientot chez Crispi</p>
-            </div>
+            <div class="receipt-footer"><p><strong>Merci et bon appetit!</strong></p><p>A bientot chez Crispi</p></div>
         `;
+    },
 
-        document.getElementById('receipt').innerHTML =
-            kitchenHTML +
-            '<div class="receipt-cut"></div>' +
-            clientHTML;
+    printReceipt(orderId) {
+        const order = this.orders.find(o => o.id === orderId);
+        if (!order) return;
 
-        setTimeout(() => window.print(), 200);
+        const mode = localStorage.getItem('crispi_printer_mode') || 'dual';
+
+        if (mode === 'single') {
+            // Single printer: both tickets in one job
+            document.getElementById('receipt').innerHTML =
+                this.buildKitchenReceipt(order) +
+                '<div class="receipt-cut"></div>' +
+                this.buildClientReceipt(order);
+            setTimeout(() => window.print(), 200);
+        } else {
+            // Dual: kitchen first, then caisse after dialog closes
+            document.getElementById('receipt').innerHTML = this.buildKitchenReceipt(order);
+            this._pendingCaissePrint = order;
+            setTimeout(() => window.print(), 200);
+        }
     },
 
     // ===== UTILITIES =====

@@ -54,7 +54,60 @@ const App = {
             }
         });
 
+        // Listen for afterprint to chain the second printer job
+        window.addEventListener('afterprint', () => {
+            if (Orders._pendingCaissePrint) {
+                Orders._printCaisseTicket();
+            }
+        });
+
+        // Printer settings
+        this.initPrinterSettings();
+
         console.log('Crispi POS initialized');
+    },
+
+    // ===== PRINTER SETTINGS =====
+    initPrinterSettings() {
+        const btnSettings = document.getElementById('btnPrinterSettings');
+        if (!btnSettings) return;
+
+        btnSettings.addEventListener('click', () => {
+            this.openPrinterSettings();
+        });
+
+        // Mode toggle buttons
+        document.querySelectorAll('.printer-mode-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.printer-mode-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                const mode = btn.dataset.mode;
+                document.getElementById('printerDualInfo').style.display = mode === 'dual' ? '' : 'none';
+                document.getElementById('printerSingleInfo').style.display = mode === 'single' ? '' : 'none';
+            });
+        });
+
+        // Save button
+        document.getElementById('printerSave').addEventListener('click', () => {
+            const mode = document.querySelector('.printer-mode-btn.active').dataset.mode;
+            localStorage.setItem('crispi_printer_mode', mode);
+            this.closeModal('printerModal');
+            this.showToast(mode === 'dual' ? '2 imprimantes configurees' : '1 imprimante configuree');
+        });
+    },
+
+    openPrinterSettings() {
+        const currentMode = localStorage.getItem('crispi_printer_mode') || 'dual';
+
+        document.querySelectorAll('.printer-mode-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.mode === currentMode);
+        });
+
+        document.getElementById('printerDualInfo').style.display = currentMode === 'dual' ? '' : 'none';
+        document.getElementById('printerSingleInfo').style.display = currentMode === 'single' ? '' : 'none';
+
+        this.openModal('printerModal');
     },
 
     // ===== REVENUE DISPLAY =====

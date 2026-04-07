@@ -1258,6 +1258,114 @@ html, body {
     color: #999;
 }
 
+/* ===== PRINTER SETTINGS MODAL ===== */
+.printer-modal {
+    max-width: 440px;
+}
+
+.printer-body {
+    padding: 20px;
+}
+
+.printer-mode-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+}
+
+.printer-mode-options {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.printer-mode-btn {
+    flex: 1;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s;
+}
+
+.printer-mode-btn:hover {
+    border-color: var(--accent);
+    color: var(--text-primary);
+}
+
+.printer-mode-btn.active {
+    border-color: var(--accent);
+    background: rgba(226,183,20,0.15);
+    color: var(--accent);
+}
+
+.printer-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    margin-bottom: 10px;
+}
+
+.printer-card-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.printer-card-icon.cuisine {
+    background: rgba(255,152,0,0.15);
+    color: #ff9800;
+}
+
+.printer-card-icon.caisse {
+    background: rgba(0,200,83,0.15);
+    color: var(--success);
+}
+
+.printer-card-text strong {
+    display: block;
+    font-size: 13px;
+    margin-bottom: 2px;
+}
+
+.printer-card-text p {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.printer-hint {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin-top: 10px;
+    padding: 10px;
+    background: rgba(226,183,20,0.05);
+    border: 1px solid rgba(226,183,20,0.15);
+    border-radius: var(--radius-sm);
+}
+
 /* ===== PRINT STYLES ===== */
 @media print {
     body > *:not(#receiptContainer) {

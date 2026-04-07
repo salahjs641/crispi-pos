@@ -59,6 +59,46 @@ const Orders = {
         }
     },
 
+    // ===== CATEGORY-SPECIFIC QUICK NOTES =====
+    QUICK_NOTES: {
+        chawarma: [
+            'Sans tomate', 'Sans oignon', 'Sans salade', 'Sans piment',
+            'Sans sauce', 'Sans frites',
+            'Sauce Biggy', 'Sauce Algerienne', 'Sauce Samurai', 'Sauce Andalouse',
+            'Extra fromage', 'Extra viande', 'Bien cuit'
+        ],
+        poulet: [
+            'Sans tomate', 'Sans oignon', 'Sans salade', 'Sans sauce',
+            'Sans frites',
+            'Sauce Biggy', 'Sauce Algerienne', 'Sauce Samurai', 'Sauce Andalouse',
+            'Extra fromage', 'Extra croustillant', 'Bien cuit'
+        ],
+        omlet: [
+            'Sans tomate', 'Sans oignon', 'Sans piment',
+            'Extra fromage', 'Bien cuit', 'Avec frites'
+        ],
+        'ftour-beldi': [
+            'Sans beurre', 'Sans miel', 'Sans jben', 'Sans olive',
+            'Sans zitoun', 'Extra the', 'Extra pain', 'Sans oeuf'
+        ],
+        'ftour-fassi': [
+            'Sans beurre', 'Sans miel', 'Sans jben', 'Sans olive',
+            'Sans zitoun', 'Extra the', 'Extra pain', 'Sans oeuf'
+        ],
+        'ftour-chamali': [
+            'Sans beurre', 'Sans miel', 'Sans jben', 'Sans olive',
+            'Sans zitoun', 'Extra the', 'Extra pain', 'Sans oeuf'
+        ],
+        'ftour-express': [
+            'Sans beurre', 'Sans miel', 'Sans jben', 'Sans olive',
+            'Extra the', 'Extra pain', 'Sans oeuf'
+        ],
+        boissons: [
+            'Sans sucre', '1 sucre', '2 sucres', '3 sucres',
+            'Avec glace', 'Sans glace', 'Bien frais', 'Tiede'
+        ]
+    },
+
     // ===== NOTE / CUSTOMIZATION MODAL =====
     initNoteModal() {
         const noteConfirm = document.getElementById('noteConfirm');
@@ -73,7 +113,7 @@ const Orders = {
             if (e.key === 'Enter') this.saveNote();
         });
 
-        // Quick note buttons
+        // Quick note buttons (delegated)
         quickNotes.addEventListener('click', (e) => {
             const btn = e.target.closest('.quick-note-btn');
             if (!btn) return;
@@ -90,6 +130,15 @@ const Orders = {
         this._noteItemId = itemId;
         document.getElementById('noteItemName').textContent = item.product.name;
         document.getElementById('noteInput').value = item.note || '';
+
+        // Swap quick notes based on product category
+        const category = item.product.category || '';
+        const notes = this.QUICK_NOTES[category] || this.QUICK_NOTES['chawarma'];
+        const quickNotes = document.getElementById('quickNotes');
+        quickNotes.innerHTML = notes.map(n =>
+            `<button class="quick-note-btn" data-note="${n}">${n}</button>`
+        ).join('');
+
         App.openModal('noteModal');
         setTimeout(() => document.getElementById('noteInput').focus(), 100);
     },

@@ -1,5 +1,5 @@
 // Service Worker — enables offline mode and PWA install
-const CACHE_NAME = 'crispi-pos-v7';
+const CACHE_NAME = 'crispi-pos-v8';
 const ASSETS = [
     './',
     './index.html',
@@ -18,7 +18,44 @@ const ASSETS = [
     './js/app.js',
     './js/log.js',
     './js/admin.js',
-    './manifest.json'
+    './manifest.json',
+    // Product images
+    './img/products/cw-01.jpeg',
+    './img/products/cw-02.jpeg',
+    './img/products/cw-03.jpeg',
+    './img/products/cw-04.jpeg',
+    './img/products/cw-05.jpeg',
+    './img/products/cw-06.jpeg',
+    './img/products/cw-07.jpeg',
+    './img/products/cw-08.jpeg',
+    './img/products/cw-09.jpeg',
+    './img/products/cw-10.jpeg',
+    './img/products/pk-01.jpeg',
+    './img/products/pk-02.jpeg',
+    './img/products/pk-03.jpeg',
+    './img/products/pk-04.jpeg',
+    './img/products/pk-05.jpeg',
+    './img/products/pk-06.jpeg',
+    './img/products/pk-07.jpeg',
+    './img/products/pk-08.jpeg',
+    './img/products/pk-09.jpeg',
+    './img/products/pk-10.jpeg',
+    './img/products/om-01.jpg',
+    './img/products/om-02.jpg',
+    './img/products/om-03.jpg',
+    './img/products/om-04.jpg',
+    './img/products/om-05.jpg',
+    './img/products/fb-01.jpg',
+    './img/products/ff-01.jpg',
+    './img/products/fc-01.jpg',
+    './img/products/bs-01.jpg',
+    './img/products/bs-02.jpg',
+    './img/products/bs-03.jpg',
+    './img/products/bs-04.jpg',
+    './img/products/bs-05.jpg',
+    './img/products/bs-06.jpg',
+    './img/products/bs-07.jpeg',
+    './img/products/bs-08.jpeg'
 ];
 
 // Install — cache all assets

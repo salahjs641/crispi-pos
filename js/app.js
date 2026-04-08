@@ -15,6 +15,14 @@ const App = {
             await Storage.syncFromSupabase();
         }
 
+        // One-time reset to start clean (2026-04-08)
+        if (!localStorage.getItem('crispi_clean_reset_20260408')) {
+            localStorage.setItem('crispi_revenue', JSON.stringify(0));
+            localStorage.setItem('crispi_last_revenue_reset', new Date().toISOString().split('T')[0]);
+            localStorage.setItem('crispi_clean_reset_20260408', 'done');
+            if (Storage._supabase) Storage._syncRevenueToSupabase(0);
+        }
+
         // Daily revenue reset at 7 AM
         this.checkDailyReset();
         // Check every 2 minutes for 7 AM reset

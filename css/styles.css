@@ -328,10 +328,44 @@ html, body {
 .order-meta {
     display: flex;
     align-items: center;
-    gap: 12px;
+    flex-wrap: wrap;
+    gap: 10px;
     padding: 10px 16px;
     border-bottom: 1px solid var(--border);
     background: rgba(226,183,20,0.03);
+}
+
+.order-type-selector {
+    display: flex;
+    gap: 4px;
+    width: 100%;
+}
+
+.order-type-btn {
+    flex: 1;
+    padding: 8px 0;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-family: var(--font);
+    transition: all 0.15s;
+}
+
+.order-type-btn:hover {
+    border-color: var(--accent);
+    color: var(--text-primary);
+}
+
+.order-type-btn.active {
+    background: var(--accent);
+    color: var(--bg-primary);
+    border-color: var(--accent);
 }
 
 .server-selector {
@@ -1228,6 +1262,7 @@ html, body {
     width: 80mm;
     font-family: 'Courier New', monospace;
     font-size: 12px;
+    font-weight: bold;
     color: #000;
     background: #fff;
     padding: 5mm;
@@ -1528,6 +1563,11 @@ html, body {
         width: 80mm;
         margin: 0;
         padding: 2mm;
+        font-weight: bold !important;
+    }
+
+    .receipt * {
+        font-weight: bold !important;
     }
 
     @page {

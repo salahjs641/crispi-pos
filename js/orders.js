@@ -15,6 +15,14 @@ const Orders = {
         document.getElementById('btnValidate').addEventListener('click', () => this.validate());
         document.getElementById('btnCancel').addEventListener('click', () => this.cancel());
 
+        // Order type selector (Sur place / A emporter)
+        document.querySelectorAll('.order-type-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.order-type-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+
         // Server selector
         document.getElementById('serverButtons').addEventListener('click', (e) => {
             const btn = e.target.closest('.server-btn');
@@ -327,7 +335,9 @@ const Orders = {
         const change = paid > 0 ? paid - total : 0;
         const orderNumber = Storage.getOrderNumber();
 
-        // Get server name and table number
+        // Get order type, server name and table number
+        const activeType = document.querySelector('.order-type-btn.active');
+        const orderType = activeType ? activeType.dataset.type : 'Sur place';
         const activeServer = document.querySelector('.server-btn.active');
         const serverName = activeServer ? activeServer.dataset.server : '';
         const tableNumber = document.getElementById('tableNumber').value || '';
@@ -345,6 +355,7 @@ const Orders = {
                 note: i.note || ''
             })),
             total: total,
+            orderType: orderType,
             serverName: serverName,
             tableNumber: tableNumber,
             timestamp: new Date().toISOString()
@@ -495,6 +506,7 @@ const Orders = {
             </tr>
         `).join('');
 
+        const typeLine = order.orderType ? `<br><strong style="font-size:14px;">${order.orderType.toUpperCase()}</strong>` : '';
         const serverLine = order.serverName ? `<br>Serveur: ${order.serverName}` : '';
         const tableLine = order.tableNumber ? ` | Table: ${order.tableNumber}` : '';
 
@@ -506,7 +518,7 @@ const Orders = {
             </div>
             <hr class="receipt-separator">
             <div class="receipt-info">
-                <strong>Commande #${String(order.orderNumber).padStart(4, '0')}</strong><br>
+                <strong>Commande #${String(order.orderNumber).padStart(4, '0')}</strong>${typeLine}<br>
                 Date: ${dateStr} ${timeStr}${serverLine}${tableLine}
             </div>
             <hr class="receipt-separator">
@@ -536,6 +548,7 @@ const Orders = {
             </tr>
         `).join('');
 
+        const typeLine = order.orderType ? `<br><strong style="font-size:14px;">${order.orderType.toUpperCase()}</strong>` : '';
         const serverLine = order.serverName ? `<br>Serveur: ${order.serverName}` : '';
         const tableLine = order.tableNumber ? `<br>Table: ${order.tableNumber}` : '';
 
@@ -545,7 +558,7 @@ const Orders = {
             </div>
             <hr class="receipt-separator">
             <div class="receipt-info" style="text-align:center;">
-                <strong style="font-size:16px;">Commande #${String(order.orderNumber).padStart(4, '0')}</strong><br>
+                <strong style="font-size:16px;">Commande #${String(order.orderNumber).padStart(4, '0')}</strong>${typeLine}<br>
                 ${timeStr}${serverLine}${tableLine}
             </div>
             <hr class="receipt-separator">

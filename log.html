@@ -61,6 +61,8 @@
                     <tr>
                         <th>N°</th>
                         <th>Date & Heure</th>
+                        <th>Serveur</th>
+                        <th>Table</th>
                         <th>Articles</th>
                         <th>Total</th>
                         <th>Actions</th>
@@ -75,39 +77,6 @@
             </div>
         </div>
     </main>
-
-    <!-- PASSWORD MODAL -->
-    <div class="modal-overlay" id="passwordModal">
-        <div class="modal confirm-modal">
-            <div class="modal-header">
-                <h3>Suppression protégée</h3>
-                <button class="btn-close" data-close="passwordModal">&times;</button>
-            </div>
-            <div class="password-body">
-                <p>Entrez le mot de passe pour supprimer cette commande</p>
-                <input type="password" id="deletePassword" readonly placeholder="****" autocomplete="off">
-                <div class="numpad" id="passwordNumpad">
-                    <button class="numpad-btn" data-val="1">1</button>
-                    <button class="numpad-btn" data-val="2">2</button>
-                    <button class="numpad-btn" data-val="3">3</button>
-                    <button class="numpad-btn" data-val="4">4</button>
-                    <button class="numpad-btn" data-val="5">5</button>
-                    <button class="numpad-btn" data-val="6">6</button>
-                    <button class="numpad-btn" data-val="7">7</button>
-                    <button class="numpad-btn" data-val="8">8</button>
-                    <button class="numpad-btn" data-val="9">9</button>
-                    <button class="numpad-btn" data-val="C">C</button>
-                    <button class="numpad-btn" data-val="0">0</button>
-                    <button class="numpad-btn numpad-del" data-val="del">&larr;</button>
-                </div>
-                <div class="password-error" id="passwordError" style="display:none">Mot de passe incorrect</div>
-            </div>
-            <div class="form-actions">
-                <button class="btn btn-cancel" id="passwordCancel">Annuler</button>
-                <button class="btn btn-validate" id="passwordConfirm">Confirmer</button>
-            </div>
-        </div>
-    </div>
 
     <!-- TOAST -->
     <div class="toast" id="toast">

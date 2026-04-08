@@ -1,6 +1,6 @@
 // js/admin.js — Mohamed Base Admin Panel
 
-const DEFAULT_ADMIN_PASSWORD = '1937';
+const DEFAULT_ADMIN_PASSWORD = '6543';
 
 const Admin = {
     orders: [],
@@ -208,6 +208,8 @@ const Admin = {
             if (numStr.includes(q)) return true;
             if (o.items && o.items.some(item => item.name.toLowerCase().includes(q))) return true;
             if (String(o.total).includes(q)) return true;
+            if (o.serverName && o.serverName.toLowerCase().includes(q)) return true;
+            if (o.tableNumber && String(o.tableNumber).includes(q)) return true;
             return false;
         });
 
@@ -240,10 +242,15 @@ const Admin = {
                 `<span>${item.quantity}x ${item.name}${item.note ? ` <em style="color:var(--accent);font-size:11px">(${item.note})</em>` : ''}</span>`
             ).join(' ');
 
+            const serverName = order.serverName || '-';
+            const tableNum = order.tableNumber ? `T${order.tableNumber}` : '-';
+
             return `
                 <tr>
                     <td class="order-num">#${String(order.orderNumber).padStart(4, '0')}</td>
                     <td class="order-date">${dateStr}<br>${timeStr}</td>
+                    <td class="order-server-cell">${serverName}</td>
+                    <td class="order-table-cell">${tableNum}</td>
                     <td class="order-items-summary">${itemsSummary}</td>
                     <td class="order-total-cell">${order.total.toFixed(2)} DH</td>
                     <td class="actions-cell">
@@ -392,11 +399,16 @@ const Admin = {
             </tr>
         `).join('');
 
+        const serverLine = order.serverName ? `<br>Serveur: ${order.serverName}` : '';
+        const tableLine = order.tableNumber ? `<br>Table: ${order.tableNumber}` : '';
+        const clientServerLine = order.serverName ? `<br>Serveur: ${order.serverName}` : '';
+        const clientTableLine = order.tableNumber ? ` | Table: ${order.tableNumber}` : '';
+
         document.getElementById('receipt').innerHTML = `
             <div class="receipt-header"><h2>-- CUISINE --</h2></div>
             <hr class="receipt-separator">
             <div style="text-align:center">
-                <strong style="font-size:16px">Commande #${String(order.orderNumber).padStart(4, '0')}</strong><br>${timeStr}
+                <strong style="font-size:16px">Commande #${String(order.orderNumber).padStart(4, '0')}</strong><br>${timeStr}${serverLine}${tableLine}
             </div>
             <hr class="receipt-separator">
             <table class="receipt-items">${kitchenRows}</table>
@@ -408,7 +420,7 @@ const Admin = {
             </div>
             <hr class="receipt-separator">
             <div class="receipt-info">
-                <strong>Commande #${String(order.orderNumber).padStart(4, '0')}</strong><br>Date: ${dateStr} ${timeStr}
+                <strong>Commande #${String(order.orderNumber).padStart(4, '0')}</strong><br>Date: ${dateStr} ${timeStr}${clientServerLine}${clientTableLine}
             </div>
             <hr class="receipt-separator">
             <table class="receipt-items">${clientRows}</table>

@@ -90,6 +90,7 @@ const Products = {
                     <div class="edit-badge" title="Modifier">&#9998;</div>
                     <img src="${p.image}" alt="${p.name}" onerror="this.src='${PLACEHOLDER_IMG}'">
                     <div class="product-name">${p.name}</div>
+                    ${p.description ? `<div class="product-desc">${p.description}</div>` : ''}
                     <div class="product-price">${p.price.toFixed(2)} DH</div>
                 </div>
             `).join('');

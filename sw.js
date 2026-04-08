@@ -1,5 +1,5 @@
 // Service Worker — enables offline mode and PWA install
-const CACHE_NAME = 'crispi-pos-v8';
+const CACHE_NAME = 'crispi-pos-v13';
 const ASSETS = [
     './',
     './index.html',
@@ -76,9 +76,24 @@ self.addEventListener('activate', (e) => {
     self.clients.claim();
 });
 
-// Fetch — serve from cache, fallback to network
+// Fetch — network-first for pages/JS/CSS, cache-first for images
 self.addEventListener('fetch', (e) => {
-    e.respondWith(
-        caches.match(e.request).then(cached => cached || fetch(e.request))
-    );
+    const url = new URL(e.request.url);
+    const isAsset = url.pathname.match(/\.(js|css|html)$/) || url.pathname.endsWith('/');
+
+    if (isAsset) {
+        // Network-first: always get latest code, fallback to cache if offline
+        e.respondWith(
+            fetch(e.request).then(response => {
+                const clone = response.clone();
+                caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
+                return response;
+            }).catch(() => caches.match(e.request))
+        );
+    } else {
+        // Cache-first for images and other assets
+        e.respondWith(
+            caches.match(e.request).then(cached => cached || fetch(e.request))
+        );
+    }
 });

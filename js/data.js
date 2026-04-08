@@ -11,11 +11,7 @@ const PLACEHOLDER_IMG = 'data:image/svg+xml,' + encodeURIComponent(
 const CATEGORIES = [
     { id: 'chawarma', name: 'Chawarma' },
     { id: 'poulet', name: 'Poulet Croustillant' },
-    { id: 'omlet', name: 'Omlet' },
-    { id: 'ftour-beldi', name: 'Ftour Beldi' },
-    { id: 'ftour-fassi', name: 'Ftour Fassi' },
-    { id: 'ftour-chamali', name: 'Ftour Chamali' },
-    { id: 'ftour-express', name: 'Ftour Express' },
+    { id: 'petit-dejeuner', name: 'Petit Dejeuner' },
     { id: 'boissons', name: 'Boissons' }
 ];
 
@@ -44,24 +40,18 @@ const DEFAULT_PRODUCTS = [
     { id: 'pk-09', name: 'Big Chicken Box', price: 45, category: 'poulet', image: 'img/products/pk-09.jpeg', position: 9 },
     { id: 'pk-10', name: 'Plat Chicken', price: 30, category: 'poulet', image: 'img/products/pk-10.jpeg', position: 10 },
 
-    // === OMLET ===
-    { id: 'om-01', name: 'Omelette Normal', price: 10, category: 'omlet', image: 'img/products/om-01.jpg', position: 1 },
-    { id: 'om-02', name: 'Omelette Fromage', price: 15, category: 'omlet', image: 'img/products/om-02.jpg', position: 2 },
-    { id: 'om-03', name: 'Omelette Khli3', price: 20, category: 'omlet', image: 'img/products/om-03.jpg', position: 3 },
-    { id: 'om-04', name: 'Omelette Avec Tomat', price: 20, category: 'omlet', image: 'img/products/om-04.jpg', position: 4 },
-    { id: 'om-05', name: 'Omelette Dinde Fumé', price: 20, category: 'omlet', image: 'img/products/om-05.jpg', position: 5 },
+    // === PETIT DEJEUNER — Omelettes ===
+    { id: 'om-01', name: 'Omelette Normal', price: 10, category: 'petit-dejeuner', image: 'img/products/om-01.jpg', position: 1 },
+    { id: 'om-02', name: 'Omelette Fromage', price: 15, category: 'petit-dejeuner', image: 'img/products/om-02.jpg', position: 2 },
+    { id: 'om-03', name: 'Omelette Khli3', price: 20, category: 'petit-dejeuner', image: 'img/products/om-03.jpg', position: 3 },
+    { id: 'om-04', name: 'Omelette Avec Tomat', price: 20, category: 'petit-dejeuner', image: 'img/products/om-04.jpg', position: 4 },
+    { id: 'om-05', name: 'Omelette Dinde Fumé', price: 20, category: 'petit-dejeuner', image: 'img/products/om-05.jpg', position: 5 },
 
-    // === FTOUR BELDI ===
-    { id: 'fb-01', name: 'Ftour Beldi', price: 25, category: 'ftour-beldi', image: 'img/products/fb-01.jpg', position: 1 },
-
-    // === FTOUR FASSI ===
-    { id: 'ff-01', name: 'Ftour Fassi', price: 25, category: 'ftour-fassi', image: 'img/products/ff-01.jpg', position: 1 },
-
-    // === FTOUR CHAMALI ===
-    { id: 'fc-01', name: 'Ftour Chamali', price: 30, category: 'ftour-chamali', image: 'img/products/fc-01.jpg', position: 1 },
-
-    // === FTOUR EXPRESS ===
-    { id: 'fe-01', name: 'Ftour Express', price: 20, category: 'ftour-express', image: PLACEHOLDER_IMG, position: 1 },
+    // === PETIT DEJEUNER — Ftour Complet ===
+    { id: 'ff-01', name: 'Ftour Fassi Complet', price: 25, category: 'petit-dejeuner', image: 'img/products/ff-01.jpg', position: 6, description: 'Tamlita Tajin, Imen, Khobz, Atay' },
+    { id: 'fc-01', name: 'Ftour Chamali Complet', price: 30, category: 'petit-dejeuner', image: 'img/products/fc-01.jpg', position: 7, description: 'Khli3 Alya, Jben, Fromage Hmer, Jm3ri, Zitoun, Khobz, Atay' },
+    { id: 'fe-01', name: 'Ftour Express', price: 20, category: 'petit-dejeuner', image: PLACEHOLDER_IMG, position: 8, description: 'Harcha, Zebda, 3sel, K3mri, Atay' },
+    { id: 'fb-01', name: 'Ftour Beldi Complet', price: 25, category: 'petit-dejeuner', image: 'img/products/fb-01.jpg', position: 9, description: 'Hmsa, Jahmriya, Khobza, Imen, Atay' },
 
     // === BOISSONS ===
     { id: 'bs-01', name: 'Jus d\'Orange', price: 14, category: 'boissons', image: 'img/products/bs-01.jpg', position: 1 },

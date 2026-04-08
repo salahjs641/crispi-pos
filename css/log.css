@@ -156,6 +156,20 @@ body {
     font-size: 11px;
 }
 
+.log-table .order-server-cell {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+}
+
+.log-table .order-table-cell {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent);
+    white-space: nowrap;
+}
+
 .log-table .order-total-cell {
     font-weight: 700;
     font-size: 15px;

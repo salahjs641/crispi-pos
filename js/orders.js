@@ -15,6 +15,17 @@ const Orders = {
         document.getElementById('btnValidate').addEventListener('click', () => this.validate());
         document.getElementById('btnCancel').addEventListener('click', () => this.cancel());
 
+        // Server selector
+        document.getElementById('serverButtons').addEventListener('click', (e) => {
+            const btn = e.target.closest('.server-btn');
+            if (!btn) return;
+            document.querySelectorAll('.server-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        });
+
+        // Table number selector
+        this.initTableSelector();
+
         // Quantity +/- buttons AND note click (delegated)
         document.getElementById('orderItems').addEventListener('click', (e) => {
             const btn = e.target.closest('[data-action]');
@@ -37,6 +48,48 @@ const Orders = {
         // Mobile toggle
         document.getElementById('btnOrderToggle').addEventListener('click', () => {
             document.querySelector('.order-panel').classList.toggle('open');
+        });
+    },
+
+    initTableSelector() {
+        const grid = document.getElementById('tableGrid');
+        const toggle = document.getElementById('tableToggleBtn');
+        const dropdown = document.getElementById('tableDropdown');
+        const hiddenInput = document.getElementById('tableNumber');
+
+        // Build table number buttons 1-30
+        for (let i = 1; i <= 30; i++) {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'table-num-btn';
+            btn.textContent = i;
+            btn.dataset.table = i;
+            grid.appendChild(btn);
+        }
+
+        // Toggle dropdown
+        toggle.addEventListener('click', () => {
+            dropdown.classList.toggle('open');
+        });
+
+        // Select table number
+        grid.addEventListener('click', (e) => {
+            const btn = e.target.closest('.table-num-btn');
+            if (!btn) return;
+            const num = btn.dataset.table;
+            hiddenInput.value = num;
+            toggle.textContent = num;
+            toggle.classList.add('has-value');
+            grid.querySelectorAll('.table-num-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            dropdown.classList.remove('open');
+        });
+
+        // Close dropdown on outside click
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.table-selector')) {
+                dropdown.classList.remove('open');
+            }
         });
     },
 
@@ -73,25 +126,11 @@ const Orders = {
             'Sauce Biggy', 'Sauce Algerienne', 'Sauce Samurai', 'Sauce Andalouse',
             'Extra fromage', 'Extra croustillant', 'Bien cuit'
         ],
-        omlet: [
+        'petit-dejeuner': [
             'Sans tomate', 'Sans oignon', 'Sans piment',
-            'Extra fromage', 'Bien cuit', 'Avec frites'
-        ],
-        'ftour-beldi': [
+            'Extra fromage', 'Bien cuit', 'Avec frites',
             'Sans beurre', 'Sans miel', 'Sans jben', 'Sans olive',
             'Sans zitoun', 'Extra the', 'Extra pain', 'Sans oeuf'
-        ],
-        'ftour-fassi': [
-            'Sans beurre', 'Sans miel', 'Sans jben', 'Sans olive',
-            'Sans zitoun', 'Extra the', 'Extra pain', 'Sans oeuf'
-        ],
-        'ftour-chamali': [
-            'Sans beurre', 'Sans miel', 'Sans jben', 'Sans olive',
-            'Sans zitoun', 'Extra the', 'Extra pain', 'Sans oeuf'
-        ],
-        'ftour-express': [
-            'Sans beurre', 'Sans miel', 'Sans jben', 'Sans olive',
-            'Extra the', 'Extra pain', 'Sans oeuf'
         ],
         boissons: [
             'Sans sucre', '1 sucre', '2 sucres', '3 sucres',
@@ -288,6 +327,11 @@ const Orders = {
         const change = paid > 0 ? paid - total : 0;
         const orderNumber = Storage.getOrderNumber();
 
+        // Get server name and table number
+        const activeServer = document.querySelector('.server-btn.active');
+        const serverName = activeServer ? activeServer.dataset.server : '';
+        const tableNumber = document.getElementById('tableNumber').value || '';
+
         // Save order
         const order = {
             id: 'order-' + Date.now(),
@@ -301,6 +345,8 @@ const Orders = {
                 note: i.note || ''
             })),
             total: total,
+            serverName: serverName,
+            tableNumber: tableNumber,
             timestamp: new Date().toISOString()
         };
 
@@ -319,6 +365,12 @@ const Orders = {
         this.render();
         this.updateOrderNumber();
         this.updateBadge();
+
+        // Reset table number for next order
+        document.getElementById('tableNumber').value = '';
+        document.getElementById('tableToggleBtn').textContent = '-';
+        document.getElementById('tableToggleBtn').classList.remove('has-value');
+        document.querySelectorAll('.table-num-btn').forEach(b => b.classList.remove('active'));
 
         // Close mobile panel
         document.querySelector('.order-panel').classList.remove('open');
@@ -443,6 +495,9 @@ const Orders = {
             </tr>
         `).join('');
 
+        const serverLine = order.serverName ? `<br>Serveur: ${order.serverName}` : '';
+        const tableLine = order.tableNumber ? ` | Table: ${order.tableNumber}` : '';
+
         return `
             <div class="receipt-header">
                 <h2>CRISPI</h2>
@@ -452,7 +507,7 @@ const Orders = {
             <hr class="receipt-separator">
             <div class="receipt-info">
                 <strong>Commande #${String(order.orderNumber).padStart(4, '0')}</strong><br>
-                Date: ${dateStr} ${timeStr}
+                Date: ${dateStr} ${timeStr}${serverLine}${tableLine}
             </div>
             <hr class="receipt-separator">
             <table class="receipt-items">
@@ -481,6 +536,9 @@ const Orders = {
             </tr>
         `).join('');
 
+        const serverLine = order.serverName ? `<br>Serveur: ${order.serverName}` : '';
+        const tableLine = order.tableNumber ? `<br>Table: ${order.tableNumber}` : '';
+
         return `
             <div class="receipt-header">
                 <h2>-- CUISINE --</h2>
@@ -488,7 +546,7 @@ const Orders = {
             <hr class="receipt-separator">
             <div class="receipt-info" style="text-align:center;">
                 <strong style="font-size:16px;">Commande #${String(order.orderNumber).padStart(4, '0')}</strong><br>
-                ${timeStr}
+                ${timeStr}${serverLine}${tableLine}
             </div>
             <hr class="receipt-separator">
             <table class="receipt-items">

@@ -73,11 +73,7 @@
             <nav class="category-tabs" id="categoryTabs">
                 <button class="tab active" data-category="chawarma">Chawarma</button>
                 <button class="tab" data-category="poulet">Poulet</button>
-                <button class="tab" data-category="omlet">Omlet</button>
-                <button class="tab" data-category="ftour-beldi">Ftour Beldi</button>
-                <button class="tab" data-category="ftour-fassi">Ftour Fassi</button>
-                <button class="tab" data-category="ftour-chamali">Ftour Chamali</button>
-                <button class="tab" data-category="ftour-express">Ftour Express</button>
+                <button class="tab" data-category="petit-dejeuner">Petit Dejeuner</button>
                 <button class="tab" data-category="boissons">Boissons</button>
             </nav>
             <div class="product-grid" id="productGrid">
@@ -90,6 +86,24 @@
             <div class="order-header">
                 <h2>COMMANDE EN COURS</h2>
                 <span class="order-number" id="orderNumber">#0001</span>
+            </div>
+            <div class="order-meta">
+                <div class="server-selector">
+                    <label>Serveur:</label>
+                    <div class="server-buttons" id="serverButtons">
+                        <button class="server-btn active" data-server="Salah">Salah</button>
+                        <button class="server-btn" data-server="Mohamed">Mohamed</button>
+                        <button class="server-btn" data-server="Abderhman">Abderhman</button>
+                    </div>
+                </div>
+                <div class="table-selector">
+                    <label>Table:</label>
+                    <button class="table-toggle-btn" id="tableToggleBtn" type="button">-</button>
+                    <div class="table-dropdown" id="tableDropdown">
+                        <div class="table-grid" id="tableGrid"></div>
+                    </div>
+                    <input type="hidden" id="tableNumber" value="">
+                </div>
             </div>
             <div class="order-items" id="orderItems">
                 <!-- Order items rendered by JS -->
@@ -170,11 +184,7 @@
                     <select id="productCategory" required>
                         <option value="chawarma">Chawarma</option>
                         <option value="poulet">Poulet Croustillant</option>
-                        <option value="omlet">Omlet</option>
-                        <option value="ftour-beldi">Ftour Beldi</option>
-                        <option value="ftour-fassi">Ftour Fassi</option>
-                        <option value="ftour-chamali">Ftour Chamali</option>
-                        <option value="ftour-express">Ftour Express</option>
+                        <option value="petit-dejeuner">Petit Dejeuner</option>
                         <option value="boissons">Boissons</option>
                     </select>
                 </div>

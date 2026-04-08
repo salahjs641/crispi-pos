@@ -15,9 +15,24 @@ const App = {
             await Storage.syncFromSupabase();
         }
 
-        // Seed products on first run
-        if (!localStorage.getItem('crispi_products')) {
-            Storage.saveProducts([...DEFAULT_PRODUCTS]);
+        // One-time revenue reset (April 2026)
+        if (!localStorage.getItem('crispi_revenue_reset_apr2026')) {
+            localStorage.setItem('crispi_revenue', JSON.stringify(0));
+            localStorage.setItem('crispi_revenue_reset_apr2026', 'done');
+            if (Storage._supabase) {
+                Storage._syncRevenueToSupabase(0);
+            }
+        }
+
+        // Seed products on first run OR reseed when menu version changes
+        const MENU_VERSION = 'v3-petit-dejeuner';
+        if (!localStorage.getItem('crispi_products') || localStorage.getItem('crispi_menu_version') !== MENU_VERSION) {
+            // Keep any custom products (non-default IDs), replace defaults with fresh data
+            const old = JSON.parse(localStorage.getItem('crispi_products') || '[]');
+            const defaultIds = new Set(DEFAULT_PRODUCTS.map(p => p.id));
+            const customProducts = old.filter(p => !defaultIds.has(p.id));
+            Storage.saveProducts([...DEFAULT_PRODUCTS, ...customProducts]);
+            localStorage.setItem('crispi_menu_version', MENU_VERSION);
         }
 
         // Initialize modules

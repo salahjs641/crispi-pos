@@ -61,7 +61,32 @@ const Storage = {
 
     // ===== PRODUCTS =====
     getProducts() {
-        return this._get('crispi_products') || [...DEFAULT_PRODUCTS];
+        const stored = this._get('crispi_products');
+        if (!stored) return [...DEFAULT_PRODUCTS];
+
+        // Always restore original image paths and descriptions for default products
+        const defaultMap = {};
+        DEFAULT_PRODUCTS.forEach(p => { defaultMap[p.id] = p; });
+
+        return stored.map(p => {
+            // For default products, always use the correct file path, category and description
+            if (defaultMap[p.id]) {
+                p.image = defaultMap[p.id].image;
+                p.category = defaultMap[p.id].category;
+                p.name = defaultMap[p.id].name;
+                if (defaultMap[p.id].description) p.description = defaultMap[p.id].description;
+            }
+            // For custom products with old ftour categories, migrate to petit-dejeuner
+            const oldFtourCats = ['omlet', 'ftour-beldi', 'ftour-fassi', 'ftour-chamali', 'ftour-express'];
+            if (oldFtourCats.includes(p.category)) {
+                p.category = 'petit-dejeuner';
+            }
+            // For custom products, fallback to placeholder if image is missing
+            if (!p.image || p.image === '' || p.image === 'undefined' || p.image === 'null') {
+                p.image = PLACEHOLDER_IMG;
+            }
+            return p;
+        });
     },
 
     saveProducts(products) {
@@ -170,6 +195,8 @@ const Storage = {
                             order_number: item.data.orderNumber,
                             items: item.data.items,
                             total: item.data.total,
+                            server_name: item.data.serverName || '',
+                            table_number: item.data.tableNumber || '',
                             created_at: item.data.timestamp
                         }, { onConflict: 'id' });
                         break;
@@ -262,6 +289,8 @@ const Storage = {
                     order_number: o.orderNumber,
                     items: o.items,
                     total: o.total,
+                    server_name: o.serverName || '',
+                    table_number: o.tableNumber || '',
                     created_at: o.timestamp
                 }));
 
@@ -343,6 +372,8 @@ const Storage = {
                     order_number: order.orderNumber,
                     items: order.items,
                     total: order.total,
+                    server_name: order.serverName || '',
+                    table_number: order.tableNumber || '',
                     created_at: order.timestamp
                 }, { onConflict: 'id' });
             } catch (e) { console.error('Order sync failed:', e); }

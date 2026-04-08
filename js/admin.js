@@ -143,6 +143,16 @@ const Admin = {
         document.getElementById('searchInput').addEventListener('input', (e) => {
             this.filterBySearch(e.target.value);
         });
+
+        // Daily report
+        document.getElementById('btnReportToday').addEventListener('click', () => {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('reportDate').value = today;
+        });
+
+        document.getElementById('btnPrintDailyReport').addEventListener('click', () => {
+            this.printDailyReport();
+        });
     },
 
     bindNumpad(numpadId, inputId) {
@@ -433,6 +443,124 @@ const Admin = {
         `;
 
         setTimeout(() => window.print(), 200);
+    },
+
+    // ===== PRINT DAILY REPORT =====
+    printDailyReport() {
+        const reportDate = document.getElementById('reportDate').value;
+        if (!reportDate) {
+            this.showToast('Selectionnez une date');
+            return;
+        }
+
+        // Get orders for that date
+        const dayOrders = this.orders.filter(o => o.timestamp && o.timestamp.startsWith(reportDate));
+        const dayTotal = dayOrders.reduce((sum, o) => sum + o.total, 0);
+
+        // Format date
+        const d = new Date(reportDate + 'T12:00:00');
+        const dateStr = d.toLocaleDateString('fr-FR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+
+        // Revenue by server
+        const byServer = {};
+        dayOrders.forEach(o => {
+            const s = o.serverName || 'Non assigne';
+            if (!byServer[s]) byServer[s] = { total: 0, count: 0 };
+            byServer[s].total += o.total;
+            byServer[s].count++;
+        });
+
+        const serverRows = Object.entries(byServer).map(([name, data]) =>
+            `<tr><td>${name}</td><td style="text-align:center">${data.count}</td><td style="text-align:right">${data.total.toFixed(2)} DH</td></tr>`
+        ).join('');
+
+        // Revenue by order type
+        const byType = {};
+        dayOrders.forEach(o => {
+            const t = o.orderType || 'Non defini';
+            if (!byType[t]) byType[t] = { total: 0, count: 0 };
+            byType[t].total += o.total;
+            byType[t].count++;
+        });
+
+        const typeRows = Object.entries(byType).map(([type, data]) =>
+            `<tr><td>${type}</td><td style="text-align:center">${data.count}</td><td style="text-align:right">${data.total.toFixed(2)} DH</td></tr>`
+        ).join('');
+
+        // Top products
+        const productMap = {};
+        dayOrders.forEach(o => {
+            o.items.forEach(item => {
+                if (!productMap[item.name]) productMap[item.name] = { qty: 0, total: 0 };
+                productMap[item.name].qty += item.quantity;
+                productMap[item.name].total += item.quantity * item.price;
+            });
+        });
+        const topProducts = Object.entries(productMap)
+            .sort((a, b) => b[1].qty - a[1].qty)
+            .slice(0, 10);
+
+        const productRows = topProducts.map(([name, data]) =>
+            `<tr><td>${data.qty}x</td><td>${name}</td><td style="text-align:right">${data.total.toFixed(2)} DH</td></tr>`
+        ).join('');
+
+        // Build receipt
+        document.getElementById('receipt').innerHTML = `
+            <div class="receipt-header">
+                <h2>CRISPI</h2>
+                <p>RAPPORT JOURNALIER</p>
+            </div>
+            <hr class="receipt-separator">
+            <div style="text-align:center;margin:3mm 0;">
+                <strong style="font-size:13px;">${dateStr}</strong>
+            </div>
+            <hr class="receipt-separator">
+
+            <div style="text-align:center;margin:4mm 0;">
+                <div style="font-size:10px;color:#555;">CHIFFRE D'AFFAIRES</div>
+                <div style="font-size:22px;font-weight:bold;margin:2mm 0;">${dayTotal.toFixed(2)} DH</div>
+                <div style="font-size:11px;">${dayOrders.length} commande${dayOrders.length > 1 ? 's' : ''}</div>
+            </div>
+            <hr class="receipt-separator">
+
+            ${serverRows ? `
+            <div style="margin:2mm 0;font-size:11px;">
+                <strong>PAR SERVEUR:</strong>
+                <table class="receipt-items" style="margin-top:2mm;">
+                    <tr><td><strong>Nom</strong></td><td style="text-align:center"><strong>Cmd</strong></td><td style="text-align:right"><strong>Total</strong></td></tr>
+                    ${serverRows}
+                </table>
+            </div>
+            <hr class="receipt-separator">
+            ` : ''}
+
+            ${typeRows ? `
+            <div style="margin:2mm 0;font-size:11px;">
+                <strong>PAR TYPE:</strong>
+                <table class="receipt-items" style="margin-top:2mm;">
+                    <tr><td><strong>Type</strong></td><td style="text-align:center"><strong>Cmd</strong></td><td style="text-align:right"><strong>Total</strong></td></tr>
+                    ${typeRows}
+                </table>
+            </div>
+            <hr class="receipt-separator">
+            ` : ''}
+
+            ${productRows ? `
+            <div style="margin:2mm 0;font-size:11px;">
+                <strong>TOP PRODUITS:</strong>
+                <table class="receipt-items" style="margin-top:2mm;">
+                    ${productRows}
+                </table>
+            </div>
+            <hr class="receipt-separator">
+            ` : ''}
+
+            <div style="text-align:center;margin:3mm 0;font-size:10px;color:#555;">
+                Imprime le ${new Date().toLocaleDateString('fr-FR')} a ${new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+            </div>
+        `;
+
+        setTimeout(() => window.print(), 300);
     },
 
     // ===== UTILITIES =====

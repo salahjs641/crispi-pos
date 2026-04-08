@@ -15,14 +15,10 @@ const App = {
             await Storage.syncFromSupabase();
         }
 
-        // One-time revenue reset (April 2026)
-        if (!localStorage.getItem('crispi_revenue_reset_apr2026')) {
-            localStorage.setItem('crispi_revenue', JSON.stringify(0));
-            localStorage.setItem('crispi_revenue_reset_apr2026', 'done');
-            if (Storage._supabase) {
-                Storage._syncRevenueToSupabase(0);
-            }
-        }
+        // Daily revenue reset at 7 AM
+        this.checkDailyReset();
+        // Check every 2 minutes for 7 AM reset
+        setInterval(() => this.checkDailyReset(), 2 * 60 * 1000);
 
         // Seed products on first run OR reseed when menu version changes
         const MENU_VERSION = 'v3-petit-dejeuner';
@@ -123,6 +119,54 @@ const App = {
         document.getElementById('printerSingleInfo').style.display = currentMode === 'single' ? '' : 'none';
 
         this.openModal('printerModal');
+    },
+
+    // ===== DAILY REVENUE RESET (7 AM) =====
+    checkDailyReset() {
+        const now = new Date();
+        const today = now.toISOString().split('T')[0]; // YYYY-MM-DD
+        const lastResetDate = localStorage.getItem('crispi_last_revenue_reset') || '';
+
+        // If we already reset today, skip
+        if (lastResetDate === today) return;
+
+        // Only reset if it's 7 AM or later (and we haven't reset today yet)
+        if (now.getHours() >= 7) {
+            const currentRevenue = Storage.getRevenue();
+
+            // Figure out which "business day" this revenue belongs to
+            // If last reset was yesterday or earlier, save that day's revenue
+            if (currentRevenue > 0 || lastResetDate) {
+                // Count orders for the previous business day
+                const orders = JSON.parse(localStorage.getItem('crispi_orders') || '[]');
+                const prevDayOrders = lastResetDate
+                    ? orders.filter(o => {
+                        const oDate = new Date(o.timestamp);
+                        const oDay = oDate.toISOString().split('T')[0];
+                        return oDay >= lastResetDate && oDay < today;
+                    })
+                    : [];
+
+                // Save daily log for previous business day
+                if (lastResetDate && currentRevenue > 0) {
+                    Storage.saveDailyRevenueLog({
+                        date: lastResetDate,
+                        total: currentRevenue,
+                        orderCount: prevDayOrders.length,
+                        closedAt: now.toISOString()
+                    });
+                }
+            }
+
+            // Reset revenue to 0
+            localStorage.setItem('crispi_revenue', JSON.stringify(0));
+            Storage._syncRevenueToSupabase(0);
+            localStorage.setItem('crispi_last_revenue_reset', today);
+
+            // Update display
+            this.updateRevenue(0);
+            console.log('Daily revenue reset at 7 AM —', today);
+        }
     },
 
     // ===== REVENUE DISPLAY =====

@@ -129,6 +129,40 @@ const Storage = {
         return newTotal;
     },
 
+    // ===== DAILY REVENUE LOG =====
+    getDailyRevenueLogs() {
+        return this._get('crispi_daily_revenue_logs') || [];
+    },
+
+    saveDailyRevenueLog(entry) {
+        const logs = this.getDailyRevenueLogs();
+        // Don't duplicate same date
+        const exists = logs.find(l => l.date === entry.date);
+        if (exists) {
+            exists.total = entry.total;
+            exists.orderCount = entry.orderCount;
+        } else {
+            logs.push(entry);
+        }
+        // Keep last 365 days
+        if (logs.length > 365) logs.splice(0, logs.length - 365);
+        this._set('crispi_daily_revenue_logs', logs);
+        this._syncDailyLogToSupabase(entry);
+    },
+
+    async _syncDailyLogToSupabase(entry) {
+        if (this.isOnline()) {
+            try {
+                await this._supabase.from('daily_revenue').upsert({
+                    date: entry.date,
+                    total: entry.total,
+                    order_count: entry.orderCount,
+                    closed_at: entry.closedAt
+                }, { onConflict: 'date' });
+            } catch (e) { console.error('Daily log sync failed:', e); }
+        }
+    },
+
     // ===== ORDERS =====
     getOrderNumber() {
         return this._get('crispi_order_number') || 1;

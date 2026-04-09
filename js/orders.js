@@ -291,43 +291,8 @@ const Orders = {
 
             document.querySelector('.order-panel').classList.remove('open');
             App.showToast('Articles ajoutes a Table ' + tableNum);
-            return;
-        }
-
-        // Check if Sur place + table selected -> add to table tab
-        const activeType = document.querySelector('.order-type-btn.active');
-        const orderType = activeType ? activeType.dataset.type : 'Sur place';
-        const tableNum = document.getElementById('tableNumber').value;
-
-        if (orderType === 'Sur place' && tableNum) {
-            const serverBtn = document.querySelector('.server-btn.active');
-            const serverName = serverBtn ? serverBtn.dataset.server : '';
-
-            const itemsToAdd = this.items.map(i => ({
-                product_id: i.product.id,
-                name: i.product.name,
-                quantity: i.quantity,
-                price: i.product.price,
-                line_total: i.product.price * i.quantity,
-                note: i.note || ''
-            }));
-
-            Tables.addItemsToTable(tableNum, itemsToAdd, serverName);
-            Tables.updateBadge();
-
-            // Reset order
-            this.items = [];
-            this.render();
-            this.updateBadge();
-
-            // Reset table selector
-            document.getElementById('tableNumber').value = '';
-            document.getElementById('tableToggleBtn').textContent = '-';
-            document.getElementById('tableToggleBtn').classList.remove('has-value');
-            document.querySelectorAll('.table-num-btn').forEach(b => b.classList.remove('active'));
-
-            document.querySelector('.order-panel').classList.remove('open');
-            App.showToast('Articles ajoutes a Table ' + tableNum);
+            // Go back to landing
+            Tables.showLanding();
             return;
         }
 
@@ -556,10 +521,63 @@ const Orders = {
         this.autoPrintDual(order);
     },
 
+    // Same success screen but only prints caisse receipt (for table payments)
+    showSuccessAndPrintCaisse(order, paid, change, orderNumber, total) {
+        const modal = document.querySelector('.payment-modal');
+        const changeHTML = change > 0
+            ? `<div class="detail-row change-row"><span>MONNAIE:</span><span>${change.toFixed(2)} DH</span></div>`
+            : '';
+
+        modal.innerHTML = `
+            <div class="modal-header">
+                <h3>Commande validee</h3>
+                <button class="btn-close" id="successClose">&times;</button>
+            </div>
+            <div class="payment-body">
+                <div class="payment-success">
+                    <div class="payment-success-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                            <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                    </div>
+                    <h4>Commande #${String(orderNumber).padStart(4, '0')}</h4>
+                    <div class="payment-success-details">
+                        <div class="detail-row"><span>Total:</span><span>${total.toFixed(2)} DH</span></div>
+                        ${paid > 0 ? `<div class="detail-row"><span>Recu:</span><span>${paid.toFixed(2)} DH</span></div>` : ''}
+                        ${changeHTML}
+                    </div>
+                    <div class="payment-success-actions">
+                        <button class="btn btn-print-receipt" id="successPrint">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="6 9 6 2 18 2 18 9"/>
+                                <path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                                <rect x="6" y="14" width="12" height="8"/>
+                            </svg>
+                            Re-imprimer
+                        </button>
+                        <button class="btn btn-validate" id="successDone">Fermer</button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.getElementById('successClose').addEventListener('click', () => this.closeSuccess());
+        document.getElementById('successDone').addEventListener('click', () => this.closeSuccess());
+        document.getElementById('successPrint').addEventListener('click', () => {
+            document.getElementById('receipt').innerHTML = this.buildClientReceipt(order);
+            setTimeout(() => window.print(), 300);
+        });
+
+        // Print ONLY client/caisse receipt
+        document.getElementById('receipt').innerHTML = this.buildClientReceipt(order);
+        setTimeout(() => window.print(), 300);
+    },
+
     closeSuccess() {
         App.closeModal('paymentModal');
-        // Restore the payment modal HTML for next use
         this.restorePaymentModal();
+        // Return to landing screen
+        Tables.showLanding();
     },
 
     restorePaymentModal() {
@@ -749,6 +767,7 @@ const Orders = {
             this.updateBadge();
             if (this._tableMode) this.resetTableMode();
             document.querySelector('.order-panel').classList.remove('open');
+            Tables.showLanding();
         });
     }
 };

@@ -75,8 +75,42 @@
         </div>
     </header>
 
+    <!-- LANDING SCREEN: Table selection -->
+    <div class="landing-screen" id="landingScreen">
+        <div class="landing-header">
+            <h2>Nouvelle Commande</h2>
+        </div>
+        <div class="landing-body">
+            <button class="landing-btn landing-btn-emporter" id="landingEmporter">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+                    <line x1="3" y1="6" x2="21" y2="6"/>
+                    <path d="M16 10a4 4 0 01-8 0"/>
+                </svg>
+                A Emporter
+            </button>
+            <div class="landing-tables-section">
+                <h3>Sur Place — Choisir une table</h3>
+                <div class="landing-tables-grid" id="landingTablesGrid">
+                    <!-- 1-30 table buttons rendered by JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- OCCUPIED TABLES FULL SCREEN -->
+    <div class="tables-fullscreen" id="tablesFullscreen" style="display:none">
+        <div class="tables-fs-header">
+            <h2>Tables Occupees</h2>
+            <button class="btn-close-fs" id="tablesFullscreenClose">&times;</button>
+        </div>
+        <div class="tables-fs-body" id="tablesListBody">
+            <!-- Filled by JS -->
+        </div>
+    </div>
+
     <!-- MAIN CONTENT -->
-    <main class="main-content">
+    <main class="main-content" id="mainContent" style="display:none">
         <!-- LEFT PANEL: Categories + Products -->
         <section class="products-panel">
             <nav class="category-tabs" id="categoryTabs">
@@ -367,19 +401,6 @@
             </div>
             <div class="form-actions" style="padding:0 20px 20px">
                 <button class="btn btn-validate" id="printerSave">OK</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- TABLES MODAL -->
-    <div class="modal-overlay" id="tablesModal">
-        <div class="modal tables-modal">
-            <div class="modal-header">
-                <h3>Tables Occupees</h3>
-                <button class="btn-close" data-close="tablesModal">&times;</button>
-            </div>
-            <div class="tables-list-body" id="tablesListBody">
-                <!-- Filled by JS -->
             </div>
         </div>
     </div>

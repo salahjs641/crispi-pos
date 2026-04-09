@@ -1,11 +1,11 @@
-// js/tables.js — Table management: open tabs per table, add items, pay to close
+// js/tables.js — Table management: landing screen, open tabs, cuisine print, pay
 
 const Tables = {
-    // Tables data: { "3": { items: [...], serverName: "Salah", openedAt: "..." }, ... }
     _data: {},
 
     init() {
         this._data = JSON.parse(localStorage.getItem('crispi_tables') || '{}');
+        this.buildLandingGrid();
         this.bindEvents();
     },
 
@@ -23,7 +23,6 @@ const Tables = {
             .sort((a, b) => a.num - b.num);
     },
 
-    // Open or add items to a table
     addItemsToTable(tableNum, items, serverName) {
         const key = String(tableNum);
         if (!this._data[key]) {
@@ -33,7 +32,6 @@ const Tables = {
                 openedAt: new Date().toISOString()
             };
         }
-        // Merge items: if same product + same note, increase qty
         for (const newItem of items) {
             const existing = this._data[key].items.find(
                 i => i.product_id === newItem.product_id && (i.note || '') === (newItem.note || '')
@@ -55,7 +53,6 @@ const Tables = {
         return table.items.reduce((sum, i) => sum + (i.price * i.quantity), 0);
     },
 
-    // Close table after payment — returns the items for order creation
     closeTable(tableNum) {
         const key = String(tableNum);
         const table = this._data[key];
@@ -65,76 +62,182 @@ const Tables = {
         return table;
     },
 
-    bindEvents() {
-        const btn = document.getElementById('btnTables');
-        if (!btn) return;
-        btn.addEventListener('click', () => this.openTablesModal());
+    // ===== LANDING SCREEN =====
+    buildLandingGrid() {
+        const grid = document.getElementById('landingTablesGrid');
+        if (!grid) return;
+        grid.innerHTML = '';
+        for (let i = 1; i <= 30; i++) {
+            const occupied = this.getTable(i);
+            const btn = document.createElement('button');
+            btn.className = 'landing-table-btn' + (occupied ? ' occupied' : '');
+            btn.dataset.table = i;
+            btn.innerHTML = occupied
+                ? `<span class="lt-num">${i}</span><span class="lt-status">${this.getTableTotal(i).toFixed(0)} DH</span>`
+                : `<span class="lt-num">${i}</span><span class="lt-status">Libre</span>`;
+            grid.appendChild(btn);
+        }
     },
 
-    openTablesModal() {
+    refreshLanding() {
+        this.buildLandingGrid();
+        this.updateBadge();
+    },
+
+    showLanding() {
+        document.getElementById('landingScreen').style.display = '';
+        document.getElementById('mainContent').style.display = 'none';
+        document.getElementById('tablesFullscreen').style.display = 'none';
+        this.refreshLanding();
+    },
+
+    showMenu() {
+        document.getElementById('landingScreen').style.display = 'none';
+        document.getElementById('mainContent').style.display = '';
+        document.getElementById('tablesFullscreen').style.display = 'none';
+    },
+
+    showOccupiedTables() {
+        document.getElementById('landingScreen').style.display = 'none';
+        document.getElementById('mainContent').style.display = 'none';
+        document.getElementById('tablesFullscreen').style.display = '';
+        this.renderOccupiedTables();
+    },
+
+    bindEvents() {
+        // Landing: "A emporter" button
+        const emporterBtn = document.getElementById('landingEmporter');
+        if (emporterBtn) {
+            emporterBtn.addEventListener('click', () => {
+                this.showMenu();
+                // Set A emporter mode
+                document.querySelectorAll('.order-type-btn').forEach(b => b.classList.remove('active'));
+                document.querySelector('.order-type-btn[data-type="A emporter"]').classList.add('active');
+                document.getElementById('tableNumber').value = '';
+                document.getElementById('tableToggleBtn').textContent = '-';
+                document.getElementById('tableToggleBtn').classList.remove('has-value');
+                Orders.resetTableMode();
+                Orders.items = [];
+                Orders.render();
+                Orders.updateBadge();
+            });
+        }
+
+        // Landing: table button click
+        const landingGrid = document.getElementById('landingTablesGrid');
+        if (landingGrid) {
+            landingGrid.addEventListener('click', (e) => {
+                const btn = e.target.closest('.landing-table-btn');
+                if (!btn) return;
+                const num = parseInt(btn.dataset.table);
+                const occupied = this.getTable(num);
+
+                if (occupied) {
+                    // Show occupied tables view focused on this table
+                    this.showOccupiedTables();
+                } else {
+                    // Open menu for this new table
+                    this.openMenuForTable(num);
+                }
+            });
+        }
+
+        // Top bar Tables button -> show occupied tables full screen
+        const btnTables = document.getElementById('btnTables');
+        if (btnTables) {
+            btnTables.addEventListener('click', () => this.showOccupiedTables());
+        }
+
+        // Close occupied tables full screen -> back to landing
+        const closeBtn = document.getElementById('tablesFullscreenClose');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => this.showLanding());
+        }
+    },
+
+    openMenuForTable(tableNum) {
+        this.showMenu();
+
+        // Clear current order
+        Orders.items = [];
+        Orders._tableMode = parseInt(tableNum);
+
+        // Set up UI
+        document.getElementById('tableNumber').value = tableNum;
+        document.getElementById('tableToggleBtn').textContent = tableNum;
+        document.getElementById('tableToggleBtn').classList.add('has-value');
+
+        document.querySelector('.order-header h2').textContent = `TABLE ${tableNum} — AJOUTER`;
+        document.getElementById('btnValidate').textContent = 'Ajouter a Table ' + tableNum;
+
+        document.querySelectorAll('.order-type-btn').forEach(b => b.classList.remove('active'));
+        document.querySelector('.order-type-btn[data-type="Sur place"]').classList.add('active');
+
+        Orders.render();
+        Orders.updateBadge();
+    },
+
+    // ===== OCCUPIED TABLES FULL SCREEN =====
+    renderOccupiedTables() {
         const occupied = this.getOccupiedTables();
         const container = document.getElementById('tablesListBody');
 
         if (occupied.length === 0) {
             container.innerHTML = '<div class="tables-empty">Aucune table occupee</div>';
-        } else {
-            container.innerHTML = occupied.map(t => {
-                const total = t.items.reduce((sum, i) => sum + (i.price * i.quantity), 0);
-                const itemsList = t.items.map(i =>
-                    `<div class="table-detail-item">
-                        <span class="table-detail-qty">${i.quantity}x</span>
-                        <span class="table-detail-name">${i.name}${i.note ? ` <small>(${i.note})</small>` : ''}</span>
-                        <span class="table-detail-price">${(i.price * i.quantity).toFixed(2)}</span>
-                    </div>`
-                ).join('');
-
-                return `
-                    <div class="table-card-occupied" data-table="${t.num}">
-                        <div class="table-card-header">
-                            <div class="table-card-num">Table ${t.num}</div>
-                            <div class="table-card-server">${t.serverName || ''}</div>
-                            <div class="table-card-total">${total.toFixed(2)} DH</div>
-                        </div>
-                        <div class="table-card-items">${itemsList}</div>
-                        <div class="table-card-actions">
-                            <button class="btn btn-table-add" data-table-add="${t.num}">+ Ajouter</button>
-                            <button class="btn btn-table-cuisine" data-table-cuisine="${t.num}">Cuisine</button>
-                            <button class="btn btn-table-pay" data-table-pay="${t.num}">Payer</button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
+            return;
         }
 
-        App.openModal('tablesModal');
+        container.innerHTML = occupied.map(t => {
+            const total = t.items.reduce((sum, i) => sum + (i.price * i.quantity), 0);
+            const itemsList = t.items.map(i =>
+                `<div class="table-detail-item">
+                    <span class="table-detail-qty">${i.quantity}x</span>
+                    <span class="table-detail-name">${i.name}${i.note ? ` <small>(${i.note})</small>` : ''}</span>
+                    <span class="table-detail-price">${(i.price * i.quantity).toFixed(2)}</span>
+                </div>`
+            ).join('');
+
+            return `
+                <div class="table-card-occupied" data-table="${t.num}">
+                    <div class="table-card-header">
+                        <div class="table-card-num">Table ${t.num}</div>
+                        <div class="table-card-server">${t.serverName || ''}</div>
+                        <div class="table-card-total">${total.toFixed(2)} DH</div>
+                    </div>
+                    <div class="table-card-items">${itemsList}</div>
+                    <div class="table-card-actions">
+                        <button class="btn btn-table-add" data-table-add="${t.num}">+ Ajouter</button>
+                        <button class="btn btn-table-cuisine" data-table-cuisine="${t.num}">Cuisine</button>
+                        <button class="btn btn-table-pay" data-table-pay="${t.num}">Payer</button>
+                    </div>
+                </div>
+            `;
+        }).join('');
 
         // Bind action buttons
         container.querySelectorAll('[data-table-add]').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                const num = btn.dataset.tableAdd;
-                this.startAddingToTable(num);
+                this.startAddingToTable(btn.dataset.tableAdd);
             });
         });
 
         container.querySelectorAll('[data-table-cuisine]').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                const num = btn.dataset.tableCuisine;
-                this.sendToCuisine(num);
+                this.sendToCuisine(btn.dataset.tableCuisine);
             });
         });
 
         container.querySelectorAll('[data-table-pay]').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                const num = btn.dataset.tablePay;
-                this.payTable(num);
+                this.payTable(btn.dataset.tablePay);
             });
         });
     },
 
-    // Send kitchen ticket for a table
+    // ===== SEND KITCHEN TICKET =====
     sendToCuisine(tableNum) {
         const table = this.getTable(tableNum);
         if (!table) return;
@@ -153,7 +256,7 @@ const Tables = {
 
         const serverLine = table.serverName ? `<br>Serveur: ${table.serverName}` : '';
 
-        const receipt = `
+        document.getElementById('receipt').innerHTML = `
             <div class="receipt-header">
                 <h2>-- CUISINE --</h2>
             </div>
@@ -173,59 +276,27 @@ const Tables = {
             <hr class="receipt-separator">
         `;
 
-        document.getElementById('receipt').innerHTML = receipt;
         setTimeout(() => window.print(), 300);
-
         App.showToast('Ticket cuisine envoye - Table ' + tableNum);
     },
 
-    // Switch POS to "adding to table X" mode
+    // ===== ADD MORE ITEMS =====
     startAddingToTable(tableNum) {
-        App.closeModal('tablesModal');
-
-        // Clear current order
-        Orders.items = [];
-
-        // Set table mode
-        Orders._tableMode = parseInt(tableNum);
-
-        // Update UI to show which table we're adding to
-        document.getElementById('tableNumber').value = tableNum;
-        document.getElementById('tableToggleBtn').textContent = tableNum;
-        document.getElementById('tableToggleBtn').classList.add('has-value');
-
-        // Update order header to show table mode
-        document.querySelector('.order-header h2').textContent = `TABLE ${tableNum} — AJOUTER`;
-        document.getElementById('btnValidate').textContent = 'Ajouter a Table ' + tableNum;
-
-        // Make sure Sur place is selected
-        document.querySelectorAll('.order-type-btn').forEach(b => b.classList.remove('active'));
-        document.querySelector('.order-type-btn[data-type="Sur place"]').classList.add('active');
-
-        Orders.render();
-        Orders.updateBadge();
-
-        // Open order panel on mobile
-        document.querySelector('.order-panel').classList.add('open');
-
-        App.showToast('Ajoutez des articles pour Table ' + tableNum);
+        this.openMenuForTable(parseInt(tableNum));
     },
 
-    // Pay and close a table
+    // ===== PAY TABLE (caisse receipt only) =====
     payTable(tableNum) {
-        App.closeModal('tablesModal');
         const table = this.getTable(tableNum);
         if (!table) return;
 
         const total = this.getTableTotal(tableNum);
 
-        // Load items into Orders for the payment flow
         Orders._tablePayMode = parseInt(tableNum);
         Orders._tablePayItems = table.items;
         Orders._tablePayTotal = total;
         Orders._tablePayServer = table.serverName;
 
-        // Show payment modal with table total
         document.getElementById('paymentTotal').textContent = total.toFixed(2) + ' DH';
         document.getElementById('paymentAmount').value = '';
         document.getElementById('paymentChangeRow').style.display = 'none';
@@ -243,7 +314,6 @@ const Tables = {
         const change = paid > 0 ? paid - total : 0;
         const orderNumber = Storage.getOrderNumber();
 
-        // Create order from table
         const order = {
             id: 'order-' + Date.now(),
             orderNumber: orderNumber,
@@ -258,28 +328,23 @@ const Tables = {
         Storage.saveOrder(order);
         Orders.lastOrder = order;
 
-        // Update revenue
         const newRevenue = Storage.addRevenue(total);
         App.updateRevenue(newRevenue);
 
-        // Increment order number
         Storage.incrementOrderNumber();
         Orders.updateOrderNumber();
 
-        // Close the table
         this.closeTable(tableNum);
 
-        // Clean up table pay mode
         Orders._tablePayMode = null;
         Orders._tablePayItems = null;
         Orders._tablePayTotal = null;
         Orders._tablePayServer = null;
 
-        // Show success and print
-        Orders.showSuccessAndPrint(order, paid, change, orderNumber, total);
+        // Print ONLY caisse receipt (not kitchen — that was already sent)
+        Orders.showSuccessAndPrintCaisse(order, paid, change, orderNumber, total);
     },
 
-    // Get count of occupied tables for badge
     getOccupiedCount() {
         return Object.keys(this._data).length;
     },

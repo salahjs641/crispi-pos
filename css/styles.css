@@ -1828,31 +1828,66 @@ html, body {
     border-color: var(--accent);
 }
 
+.table-card-occupied.expanded {
+    border-color: var(--accent);
+    box-shadow: 0 4px 20px rgba(226,183,20,0.15);
+}
+
 .table-card-header {
     display: flex;
     align-items: center;
-    padding: 12px 16px;
+    padding: 14px 16px;
     background: rgba(226,183,20,0.08);
-    border-bottom: 1px solid var(--border);
     gap: 12px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.table-card-header:hover {
+    background: rgba(226,183,20,0.15);
 }
 
 .table-card-num {
-    font-size: 16px;
+    font-size: 18px;
     font-weight: 800;
     color: var(--accent);
 }
 
 .table-card-server {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.table-card-count {
     flex: 1;
     font-size: 12px;
     color: var(--text-secondary);
+    text-align: right;
 }
 
 .table-card-total {
     font-size: 18px;
     font-weight: 800;
     color: var(--accent);
+}
+
+.table-card-arrow {
+    font-size: 12px;
+    color: var(--text-secondary);
+    transition: transform 0.2s;
+}
+
+.table-card-occupied.expanded .table-card-arrow {
+    transform: rotate(180deg);
+}
+
+.table-card-expand {
+    display: none;
+    border-top: 1px solid var(--border);
+}
+
+.table-card-occupied.expanded .table-card-expand {
+    display: block;
 }
 
 .table-card-items {

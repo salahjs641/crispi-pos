@@ -201,6 +201,7 @@ const Tables = {
 
         container.innerHTML = pageTables.map(t => {
             const total = t.items.reduce((sum, i) => sum + (i.price * i.quantity), 0);
+            const count = t.items.reduce((sum, i) => sum + i.quantity, 0);
             const itemsList = t.items.map(i =>
                 `<div class="table-detail-item">
                     <span class="table-detail-qty">${i.quantity}x</span>
@@ -211,16 +212,20 @@ const Tables = {
 
             return `
                 <div class="table-card-occupied" data-table="${t.num}">
-                    <div class="table-card-header">
+                    <div class="table-card-header" data-toggle="${t.num}">
                         <div class="table-card-num">Table ${t.num}</div>
                         <div class="table-card-server">${t.serverName || ''}</div>
+                        <div class="table-card-count">${count} art.</div>
                         <div class="table-card-total">${total.toFixed(2)} DH</div>
+                        <div class="table-card-arrow">&#9660;</div>
                     </div>
-                    <div class="table-card-items">${itemsList}</div>
-                    <div class="table-card-actions">
-                        <button class="btn btn-table-add" data-table-add="${t.num}">+ Ajouter</button>
-                        <button class="btn btn-table-cuisine" data-table-cuisine="${t.num}">Cuisine</button>
-                        <button class="btn btn-table-pay" data-table-pay="${t.num}">Payer</button>
+                    <div class="table-card-expand" id="tableExpand-${t.num}">
+                        <div class="table-card-items">${itemsList}</div>
+                        <div class="table-card-actions">
+                            <button class="btn btn-table-add" data-table-add="${t.num}">+ Ajouter</button>
+                            <button class="btn btn-table-cuisine" data-table-cuisine="${t.num}">Cuisine</button>
+                            <button class="btn btn-table-pay" data-table-pay="${t.num}">Payer</button>
+                        </div>
                     </div>
                 </div>
             `;
@@ -244,6 +249,22 @@ const Tables = {
         } else {
             pagination.innerHTML = '';
         }
+
+        // Toggle expand on header click
+        container.querySelectorAll('[data-toggle]').forEach(header => {
+            header.addEventListener('click', () => {
+                const num = header.dataset.toggle;
+                const expand = document.getElementById('tableExpand-' + num);
+                const card = header.closest('.table-card-occupied');
+                const wasOpen = card.classList.contains('expanded');
+
+                // Close all
+                container.querySelectorAll('.table-card-occupied').forEach(c => c.classList.remove('expanded'));
+
+                // Toggle this one
+                if (!wasOpen) card.classList.add('expanded');
+            });
+        });
 
         // Bind action buttons
         container.querySelectorAll('[data-table-add]').forEach(btn => {

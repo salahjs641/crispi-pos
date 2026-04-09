@@ -1580,6 +1580,7 @@ html, body {
     max-height: 85vh;
     display: flex;
     flex-direction: column;
+    width: 95%;
 }
 
 .tables-list-body {
@@ -1588,7 +1589,7 @@ html, body {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 14px;
 }
 
 .tables-empty {
@@ -1639,28 +1640,37 @@ html, body {
 }
 
 .table-card-items {
-    padding: 10px 16px;
-    max-height: 150px;
+    padding: 8px 16px;
+    max-height: 180px;
     overflow-y: auto;
 }
 
 .table-detail-item {
     display: flex;
-    align-items: baseline;
-    gap: 8px;
-    padding: 3px 0;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 0;
     font-size: 13px;
+    border-bottom: 1px solid rgba(42,42,74,0.3);
+}
+
+.table-detail-item:last-child {
+    border-bottom: none;
 }
 
 .table-detail-qty {
-    color: var(--text-secondary);
-    font-weight: 600;
-    min-width: 28px;
+    color: var(--accent);
+    font-weight: 700;
+    min-width: 30px;
+    flex-shrink: 0;
 }
 
 .table-detail-name {
     flex: 1;
     color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .table-detail-name small {
@@ -1671,8 +1681,9 @@ html, body {
 .table-detail-price {
     color: var(--text-secondary);
     font-weight: 600;
-    min-width: 50px;
+    min-width: 55px;
     text-align: right;
+    flex-shrink: 0;
 }
 
 .table-card-actions {
@@ -1698,6 +1709,28 @@ html, body {
 
 .btn-table-add:hover {
     background: rgba(226,183,20,0.2);
+}
+
+.btn-table-cuisine {
+    flex: 1;
+    padding: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    border: 1px solid #ff9800;
+    border-radius: var(--radius-sm);
+    background: rgba(255,152,0,0.1);
+    color: #ff9800;
+    cursor: pointer;
+    font-family: var(--font);
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.btn-table-cuisine:hover {
+    background: rgba(255,152,0,0.2);
 }
 
 .btn-table-pay {

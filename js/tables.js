@@ -98,6 +98,7 @@ const Tables = {
                         <div class="table-card-items">${itemsList}</div>
                         <div class="table-card-actions">
                             <button class="btn btn-table-add" data-table-add="${t.num}">+ Ajouter</button>
+                            <button class="btn btn-table-cuisine" data-table-cuisine="${t.num}">Cuisine</button>
                             <button class="btn btn-table-pay" data-table-pay="${t.num}">Payer</button>
                         </div>
                     </div>
@@ -116,6 +117,14 @@ const Tables = {
             });
         });
 
+        container.querySelectorAll('[data-table-cuisine]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const num = btn.dataset.tableCuisine;
+                this.sendToCuisine(num);
+            });
+        });
+
         container.querySelectorAll('[data-table-pay]').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -123,6 +132,51 @@ const Tables = {
                 this.payTable(num);
             });
         });
+    },
+
+    // Send kitchen ticket for a table
+    sendToCuisine(tableNum) {
+        const table = this.getTable(tableNum);
+        if (!table) return;
+
+        const total = this.getTableTotal(tableNum);
+        const date = new Date();
+        const timeStr = date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+
+        const itemsRows = table.items.map(item => `
+            <tr>
+                <td class="item-qty">${item.quantity}x</td>
+                <td class="item-name"><strong>${item.name}</strong>${item.note ? `<br><span class="kitchen-note">** ${item.note} **</span>` : ''}</td>
+                <td class="item-price">${(item.quantity * item.price).toFixed(2)}</td>
+            </tr>
+        `).join('');
+
+        const serverLine = table.serverName ? `<br>Serveur: ${table.serverName}` : '';
+
+        const receipt = `
+            <div class="receipt-header">
+                <h2>-- CUISINE --</h2>
+            </div>
+            <hr class="receipt-separator">
+            <div class="receipt-info" style="text-align:center;">
+                <strong style="font-size:16px;">Table ${tableNum}</strong>
+                <br><strong style="font-size:14px;">SUR PLACE</strong><br>
+                ${timeStr}${serverLine}
+            </div>
+            <hr class="receipt-separator">
+            <table class="receipt-items">
+                ${itemsRows}
+            </table>
+            <div class="receipt-total">
+                TOTAL: ${total.toFixed(2)} DH
+            </div>
+            <hr class="receipt-separator">
+        `;
+
+        document.getElementById('receipt').innerHTML = receipt;
+        setTimeout(() => window.print(), 300);
+
+        App.showToast('Ticket cuisine envoye - Table ' + tableNum);
     },
 
     // Switch POS to "adding to table X" mode

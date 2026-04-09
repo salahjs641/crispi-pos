@@ -20,6 +20,7 @@ const Orders = {
             btn.addEventListener('click', () => {
                 document.querySelectorAll('.order-type-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
+                this.updateValidateButton();
             });
         });
 
@@ -75,9 +76,16 @@ const Orders = {
             grid.appendChild(btn);
         }
 
-        // Toggle dropdown
+        // Toggle dropdown — highlight occupied tables
         toggle.addEventListener('click', () => {
             dropdown.classList.toggle('open');
+            if (dropdown.classList.contains('open')) {
+                grid.querySelectorAll('.table-num-btn').forEach(btn => {
+                    const num = btn.dataset.table;
+                    const occupied = Tables.getTable(num);
+                    btn.classList.toggle('occupied', !!occupied);
+                });
+            }
         });
 
         // Select table number
@@ -91,6 +99,7 @@ const Orders = {
             grid.querySelectorAll('.table-num-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             dropdown.classList.remove('open');
+            this.updateValidateButton();
         });
 
         // Close dropdown on outside click
@@ -254,7 +263,98 @@ const Orders = {
 
     validate() {
         if (this.items.length === 0) return;
+
+        // If in table add mode, add items to the table and return
+        if (this._tableMode) {
+            const tableNum = this._tableMode;
+            const serverBtn = document.querySelector('.server-btn.active');
+            const serverName = serverBtn ? serverBtn.dataset.server : '';
+
+            const itemsToAdd = this.items.map(i => ({
+                product_id: i.product.id,
+                name: i.product.name,
+                quantity: i.quantity,
+                price: i.product.price,
+                line_total: i.product.price * i.quantity,
+                note: i.note || ''
+            }));
+
+            Tables.addItemsToTable(tableNum, itemsToAdd, serverName);
+            Tables.updateBadge();
+
+            // Reset
+            this.items = [];
+            this._tableMode = null;
+            this.render();
+            this.updateBadge();
+            this.resetTableMode();
+
+            document.querySelector('.order-panel').classList.remove('open');
+            App.showToast('Articles ajoutes a Table ' + tableNum);
+            return;
+        }
+
+        // Check if Sur place + table selected -> add to table tab
+        const activeType = document.querySelector('.order-type-btn.active');
+        const orderType = activeType ? activeType.dataset.type : 'Sur place';
+        const tableNum = document.getElementById('tableNumber').value;
+
+        if (orderType === 'Sur place' && tableNum) {
+            const serverBtn = document.querySelector('.server-btn.active');
+            const serverName = serverBtn ? serverBtn.dataset.server : '';
+
+            const itemsToAdd = this.items.map(i => ({
+                product_id: i.product.id,
+                name: i.product.name,
+                quantity: i.quantity,
+                price: i.product.price,
+                line_total: i.product.price * i.quantity,
+                note: i.note || ''
+            }));
+
+            Tables.addItemsToTable(tableNum, itemsToAdd, serverName);
+            Tables.updateBadge();
+
+            // Reset order
+            this.items = [];
+            this.render();
+            this.updateBadge();
+
+            // Reset table selector
+            document.getElementById('tableNumber').value = '';
+            document.getElementById('tableToggleBtn').textContent = '-';
+            document.getElementById('tableToggleBtn').classList.remove('has-value');
+            document.querySelectorAll('.table-num-btn').forEach(b => b.classList.remove('active'));
+
+            document.querySelector('.order-panel').classList.remove('open');
+            App.showToast('Articles ajoutes a Table ' + tableNum);
+            return;
+        }
+
         this.openPaymentModal();
+    },
+
+    resetTableMode() {
+        this._tableMode = null;
+        document.querySelector('.order-header h2').textContent = 'COMMANDE EN COURS';
+        document.getElementById('btnValidate').textContent = 'Valider Commande';
+        document.getElementById('tableNumber').value = '';
+        document.getElementById('tableToggleBtn').textContent = '-';
+        document.getElementById('tableToggleBtn').classList.remove('has-value');
+        document.querySelectorAll('.table-num-btn').forEach(b => b.classList.remove('active'));
+    },
+
+    updateValidateButton() {
+        if (this._tableMode) return; // Already in table add mode, don't change
+        const activeType = document.querySelector('.order-type-btn.active');
+        const orderType = activeType ? activeType.dataset.type : '';
+        const tableNum = document.getElementById('tableNumber').value;
+
+        if (orderType === 'Sur place' && tableNum) {
+            document.getElementById('btnValidate').textContent = 'Ajouter a Table ' + tableNum;
+        } else {
+            document.getElementById('btnValidate').textContent = 'Valider Commande';
+        }
     },
 
     // ===== PAYMENT MODAL =====
@@ -291,7 +391,13 @@ const Orders = {
         });
 
         document.getElementById('paymentConfirm').addEventListener('click', () => this.confirmPayment());
-        document.getElementById('paymentCancel').addEventListener('click', () => App.closeModal('paymentModal'));
+        document.getElementById('paymentCancel').addEventListener('click', () => {
+            this._tablePayMode = null;
+            this._tablePayItems = null;
+            this._tablePayTotal = null;
+            this._tablePayServer = null;
+            App.closeModal('paymentModal');
+        });
     },
 
     updatePaymentChange() {
@@ -300,7 +406,7 @@ const Orders = {
         const changeEl = document.getElementById('paymentChange');
         const errorEl = document.getElementById('paymentError');
         const paid = parseFloat(amountInput.value) || 0;
-        const total = this.getTotal();
+        const total = this._tablePayMode ? this._tablePayTotal : this.getTotal();
 
         if (!amountInput.value || paid === 0) {
             changeRow.style.display = 'none';
@@ -324,6 +430,18 @@ const Orders = {
 
     confirmPayment() {
         const paid = parseFloat(document.getElementById('paymentAmount').value) || 0;
+
+        // If paying a table, delegate to Tables
+        if (this._tablePayMode) {
+            const total = this._tablePayTotal;
+            if (paid > 0 && paid < total) {
+                document.getElementById('paymentError').style.display = '';
+                return;
+            }
+            Tables.confirmTablePayment(paid);
+            return;
+        }
+
         const total = this.getTotal();
 
         // Allow confirming with exact amount or more, or with 0 (no change needed, e.g. card payment)
@@ -386,6 +504,10 @@ const Orders = {
         // Close mobile panel
         document.querySelector('.order-panel').classList.remove('open');
 
+        this.showSuccessAndPrint(order, paid, change, orderNumber, total);
+    },
+
+    showSuccessAndPrint(order, paid, change, orderNumber, total) {
         // Show success screen inside the payment modal
         const modal = document.querySelector('.payment-modal');
         const changeHTML = change > 0
@@ -620,11 +742,12 @@ const Orders = {
     },
 
     cancel() {
-        if (this.items.length === 0) return;
+        if (this.items.length === 0 && !this._tableMode) return;
         App.confirm('Annuler la commande en cours ?', () => {
             this.items = [];
             this.render();
             this.updateBadge();
+            if (this._tableMode) this.resetTableMode();
             document.querySelector('.order-panel').classList.remove('open');
         });
     }

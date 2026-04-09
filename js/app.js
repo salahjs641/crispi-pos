@@ -42,8 +42,12 @@ const App = {
         // Initialize modules
         Products.init();
         Orders.init();
+        Tables.init();
         Calculator.init();
         ProductManager.init();
+
+        // Update tables badge
+        Tables.updateBadge();
 
         // Display revenue
         this.updateRevenue(Storage.getRevenue());

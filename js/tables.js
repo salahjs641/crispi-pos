@@ -177,17 +177,29 @@ const Tables = {
         Orders.updateBadge();
     },
 
-    // ===== OCCUPIED TABLES FULL SCREEN =====
+    // ===== OCCUPIED TABLES FULL SCREEN WITH PAGINATION =====
+    _currentPage: 0,
+    TABLES_PER_PAGE: 6,
+
     renderOccupiedTables() {
         const occupied = this.getOccupiedTables();
         const container = document.getElementById('tablesListBody');
+        const pagination = document.getElementById('tablesPagination');
 
         if (occupied.length === 0) {
             container.innerHTML = '<div class="tables-empty">Aucune table occupee</div>';
+            pagination.innerHTML = '';
             return;
         }
 
-        container.innerHTML = occupied.map(t => {
+        const totalPages = Math.ceil(occupied.length / this.TABLES_PER_PAGE);
+        if (this._currentPage >= totalPages) this._currentPage = totalPages - 1;
+        if (this._currentPage < 0) this._currentPage = 0;
+
+        const start = this._currentPage * this.TABLES_PER_PAGE;
+        const pageTables = occupied.slice(start, start + this.TABLES_PER_PAGE);
+
+        container.innerHTML = pageTables.map(t => {
             const total = t.items.reduce((sum, i) => sum + (i.price * i.quantity), 0);
             const itemsList = t.items.map(i =>
                 `<div class="table-detail-item">
@@ -213,6 +225,25 @@ const Tables = {
                 </div>
             `;
         }).join('');
+
+        // Pagination controls
+        if (totalPages > 1) {
+            pagination.innerHTML = `
+                <button class="page-btn page-prev" id="pagePrev" ${this._currentPage === 0 ? 'disabled' : ''}>&#8592; Precedent</button>
+                <span class="page-info">${this._currentPage + 1} / ${totalPages}</span>
+                <button class="page-btn page-next" id="pageNext" ${this._currentPage >= totalPages - 1 ? 'disabled' : ''}>Suivant &#8594;</button>
+            `;
+            document.getElementById('pagePrev').addEventListener('click', () => {
+                this._currentPage--;
+                this.renderOccupiedTables();
+            });
+            document.getElementById('pageNext').addEventListener('click', () => {
+                this._currentPage++;
+                this.renderOccupiedTables();
+            });
+        } else {
+            pagination.innerHTML = '';
+        }
 
         // Bind action buttons
         container.querySelectorAll('[data-table-add]').forEach(btn => {

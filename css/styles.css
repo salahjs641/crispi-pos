@@ -1758,12 +1758,11 @@ html, body {
 .tables-fs-body {
     flex: 1;
     min-height: 0;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    padding: 16px 24px 80px;
+    overflow: hidden;
+    padding: 16px 24px;
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-    gap: 16px;
+    gap: 14px;
     align-content: start;
 }
 
@@ -1774,6 +1773,47 @@ html, body {
     color: var(--text-secondary);
     font-size: 16px;
     font-style: italic;
+}
+
+.tables-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 12px 24px;
+    border-top: 1px solid var(--border);
+    background: var(--bg-surface);
+    flex-shrink: 0;
+}
+
+.page-btn {
+    padding: 10px 24px;
+    font-size: 14px;
+    font-weight: 700;
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-sm);
+    background: rgba(226,183,20,0.1);
+    color: var(--accent);
+    cursor: pointer;
+    font-family: var(--font);
+    transition: all 0.15s;
+}
+
+.page-btn:hover:not(:disabled) {
+    background: rgba(226,183,20,0.25);
+}
+
+.page-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.page-info {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+    min-width: 60px;
+    text-align: center;
 }
 
 .table-card-occupied {

@@ -1939,15 +1939,17 @@ html, body {
 
 .table-card-actions {
     display: flex;
-    gap: 8px;
-    padding: 10px 16px;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 10px 12px;
     border-top: 1px solid var(--border);
 }
 
 .btn-table-add {
-    flex: 1;
-    padding: 10px;
-    font-size: 13px;
+    flex: 1 1 calc(50% - 6px);
+    min-width: 0;
+    padding: 10px 6px;
+    font-size: 12px;
     font-weight: 700;
     border: 1px solid var(--accent);
     border-radius: var(--radius-sm);
@@ -1962,10 +1964,34 @@ html, body {
     background: rgba(226,183,20,0.2);
 }
 
+.btn-table-cuisine-new {
+    flex: 1 1 calc(50% - 6px);
+    min-width: 0;
+    padding: 10px 6px;
+    font-size: 12px;
+    font-weight: 700;
+    border: 1px solid #4caf50;
+    border-radius: var(--radius-sm);
+    background: rgba(76,175,80,0.1);
+    color: #4caf50;
+    cursor: pointer;
+    font-family: var(--font);
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+
+.btn-table-cuisine-new:hover {
+    background: rgba(76,175,80,0.2);
+}
+
 .btn-table-cuisine {
-    flex: 1;
-    padding: 10px;
-    font-size: 13px;
+    flex: 1 1 calc(50% - 6px);
+    min-width: 0;
+    padding: 10px 6px;
+    font-size: 12px;
     font-weight: 700;
     border: 1px solid #ff9800;
     border-radius: var(--radius-sm);
@@ -1977,7 +2003,7 @@ html, body {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
+    gap: 4px;
 }
 
 .btn-table-cuisine:hover {
@@ -1985,9 +2011,10 @@ html, body {
 }
 
 .btn-table-pay {
-    flex: 1;
-    padding: 10px;
-    font-size: 13px;
+    flex: 1 1 calc(50% - 6px);
+    min-width: 0;
+    padding: 10px 6px;
+    font-size: 12px;
     font-weight: 700;
     border: none;
     border-radius: var(--radius-sm);

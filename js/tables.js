@@ -34,13 +34,13 @@ const Tables = {
         }
         for (const newItem of items) {
             const existing = this._data[key].items.find(
-                i => i.product_id === newItem.product_id && (i.note || '') === (newItem.note || '')
+                i => i.product_id === newItem.product_id && (i.note || '') === (newItem.note || '') && !i.sentToKitchen
             );
             if (existing) {
                 existing.quantity += newItem.quantity;
                 existing.line_total = existing.quantity * existing.price;
             } else {
-                this._data[key].items.push({ ...newItem });
+                this._data[key].items.push({ ...newItem, sentToKitchen: false });
             }
         }
         if (serverName) this._data[key].serverName = serverName;
@@ -223,7 +223,8 @@ const Tables = {
                         <div class="table-card-items">${itemsList}</div>
                         <div class="table-card-actions">
                             <button class="btn btn-table-add" data-table-add="${t.num}">+ Ajouter</button>
-                            <button class="btn btn-table-cuisine" data-table-cuisine="${t.num}">Cuisine</button>
+                            <button class="btn btn-table-cuisine-new" data-table-cuisine-new="${t.num}">Cuisine (Nouveau)</button>
+                            <button class="btn btn-table-cuisine" data-table-cuisine="${t.num}">Cuisine (Tout)</button>
                             <button class="btn btn-table-pay" data-table-pay="${t.num}">Payer</button>
                         </div>
                     </div>
@@ -274,6 +275,13 @@ const Tables = {
             });
         });
 
+        container.querySelectorAll('[data-table-cuisine-new]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.sendNewToCuisine(btn.dataset.tableCuisineNew);
+            });
+        });
+
         container.querySelectorAll('[data-table-cuisine]').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -294,11 +302,38 @@ const Tables = {
         const table = this.getTable(tableNum);
         if (!table) return;
 
-        const total = this.getTableTotal(tableNum);
+        this._printCuisineTicket(tableNum, table.items, '-- CUISINE --');
+
+        // Mark all items as sent
+        table.items.forEach(item => item.sentToKitchen = true);
+        this.save();
+    },
+
+    // Send ONLY new (unsent) items to kitchen
+    sendNewToCuisine(tableNum) {
+        const table = this.getTable(tableNum);
+        if (!table) return;
+
+        const newItems = table.items.filter(i => !i.sentToKitchen);
+        if (newItems.length === 0) {
+            App.showToast('Pas de nouveaux articles');
+            return;
+        }
+
+        this._printCuisineTicket(tableNum, newItems, '-- CUISINE (NOUVEAU) --');
+
+        // Mark new items as sent
+        newItems.forEach(item => item.sentToKitchen = true);
+        this.save();
+    },
+
+    _printCuisineTicket(tableNum, items, header) {
+        const table = this.getTable(tableNum);
+        const total = items.reduce((sum, i) => sum + (i.price * i.quantity), 0);
         const date = new Date();
         const timeStr = date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
 
-        const itemsRows = table.items.map(item => `
+        const itemsRows = items.map(item => `
             <tr>
                 <td class="item-qty">${item.quantity}x</td>
                 <td class="item-name"><strong>${item.name}</strong>${item.note ? `<br><span class="kitchen-note">** ${item.note} **</span>` : ''}</td>
@@ -310,7 +345,7 @@ const Tables = {
 
         document.getElementById('receipt').innerHTML = `
             <div class="receipt-header">
-                <h2>-- CUISINE --</h2>
+                <h2>${header}</h2>
             </div>
             <hr class="receipt-separator">
             <div class="receipt-info" style="text-align:center;">

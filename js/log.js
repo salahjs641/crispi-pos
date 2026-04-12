@@ -21,8 +21,9 @@ const Log = {
     },
 
     loadOrders() {
-        this.orders = JSON.parse(localStorage.getItem('crispi_orders') || '[]');
-        // Sort newest first
+        const all = JSON.parse(localStorage.getItem('crispi_orders') || '[]');
+        // Filter out deleted orders from display (they stay for revenue)
+        this.orders = all.filter(o => !o.deleted);
         this.orders.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
     },
 

@@ -191,9 +191,12 @@ const App = {
 
     // ===== DAILY SUMMARY =====
     openDailySummary() {
-        const todayOrders = Storage.getTodayOrders();
-        const revenue = todayOrders.reduce((sum, o) => sum + (o.total || 0), 0);
-        const orderCount = todayOrders.length;
+        // Revenue and products include deleted orders (money was received)
+        const allOrders = Storage.getTodayOrdersForRevenue();
+        const revenue = allOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+        // Order count: only non-deleted
+        const visibleOrders = Storage.getTodayOrders(false);
+        const orderCount = visibleOrders.length;
         const products = Storage.getTodayProductBreakdown();
 
         const now = new Date();

@@ -71,7 +71,9 @@ const Admin = {
     },
 
     loadOrders() {
-        this.orders = JSON.parse(localStorage.getItem('crispi_orders') || '[]');
+        const all = JSON.parse(localStorage.getItem('crispi_orders') || '[]');
+        // Filter out deleted orders from display (they stay in localStorage for revenue)
+        this.orders = all.filter(o => !o.deleted);
         this.orders.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
     },
 
@@ -169,9 +171,11 @@ const Admin = {
 
     // ===== STATS =====
     renderStats() {
+        // Revenue from ALL today's orders (including deleted — money was received)
         const revenue = Storage.getRevenue();
-        const today = new Date().toISOString().split('T')[0];
-        const todayCount = this.orders.filter(o => o.timestamp && o.timestamp.startsWith(today)).length;
+        // Order count: only non-deleted visible orders for today
+        const todayOrders = Storage.getTodayOrders(false);
+        const todayCount = todayOrders.length;
 
         document.getElementById('totalOrders').textContent = this.orders.length;
         document.getElementById('todayOrders').textContent = todayCount;
@@ -180,7 +184,7 @@ const Admin = {
             maximumFractionDigits: 2
         }) + ' DH';
 
-        // Count deleted (from Supabase perspective — we track locally how many were deleted)
+        // Count deleted
         const deletedCount = parseInt(localStorage.getItem('crispi_deleted_count') || '0');
         document.getElementById('deletedOrders').textContent = deletedCount;
 
@@ -307,21 +311,19 @@ const Admin = {
         // Soft-delete in Supabase
         Storage.softDeleteOrder(order.id);
 
-        // Remove from local
-        this.orders = this.orders.filter(o => o.id !== this.deleteTargetId);
+        // Mark as deleted locally (keep in array for accurate revenue)
+        order.deleted = true;
+        order.deletedAt = new Date().toISOString();
         localStorage.setItem('crispi_orders', JSON.stringify(this.orders));
 
-        // Subtract from revenue
-        const currentRevenue = Storage.getRevenue();
-        const newRevenue = Math.max(0, currentRevenue - order.total);
-        localStorage.setItem('crispi_revenue', JSON.stringify(newRevenue));
-        Storage._syncRevenueToSupabase(newRevenue);
+        // Revenue is computed from orders (including deleted) — no manual subtraction needed
 
         // Track deleted count
         const deletedCount = parseInt(localStorage.getItem('crispi_deleted_count') || '0');
         localStorage.setItem('crispi_deleted_count', String(deletedCount + 1));
 
-        // Refresh
+        // Remove from visible lists (still in localStorage for revenue)
+        this.orders = this.orders.filter(o => !o.deleted);
         this.filteredOrders = this.filteredOrders.filter(o => o.id !== this.deleteTargetId);
         this.closeModal('deleteModal');
         this.deleteTargetId = null;

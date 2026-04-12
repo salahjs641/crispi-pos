@@ -119,7 +119,8 @@ const Storage = {
     // ===== REVENUE (Chiffre d'Affaires) — computed from actual orders =====
     getRevenue() {
         // Compute from today's orders for accuracy (no drift)
-        const todayOrders = this.getTodayOrders();
+        // Always includes deleted orders — money was received even if order was removed from admin
+        const todayOrders = this.getTodayOrdersForRevenue();
         return todayOrders.reduce((sum, o) => sum + (o.total || 0), 0);
     },
 
@@ -131,20 +132,26 @@ const Storage = {
         return newTotal;
     },
 
-    // Get all orders from today (since last 7 AM reset)
-    getTodayOrders() {
+    // Get all orders from today (since last 7 AM reset) — includes deleted for accurate revenue
+    getTodayOrders(includeDeleted) {
         const orders = this._get('crispi_orders') || [];
         const resetDate = localStorage.getItem('crispi_last_revenue_reset') || new Date().toISOString().split('T')[0];
         return orders.filter(o => {
             if (!o.timestamp) return false;
+            if (!includeDeleted && o.deleted) return false;
             const oDay = o.timestamp.split('T')[0];
             return oDay >= resetDate;
         });
     },
 
-    // Get product breakdown for today
+    // Get today's orders for revenue — always includes deleted orders so revenue stays accurate
+    getTodayOrdersForRevenue() {
+        return this.getTodayOrders(true);
+    },
+
+    // Get product breakdown for today (includes deleted orders for full accuracy)
     getTodayProductBreakdown() {
-        const todayOrders = this.getTodayOrders();
+        const todayOrders = this.getTodayOrders(true);
         const products = {};
         for (const order of todayOrders) {
             for (const item of order.items) {

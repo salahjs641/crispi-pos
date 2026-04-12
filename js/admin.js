@@ -171,10 +171,8 @@ const Admin = {
 
     // ===== STATS =====
     renderStats() {
-        // Revenue from ALL today's orders (including deleted — money was received)
         const revenue = Storage.getRevenue();
-        // Order count: only non-deleted visible orders for today
-        const todayOrders = Storage.getTodayOrders(false);
+        const todayOrders = Storage.getTodayOrders();
         const todayCount = todayOrders.length;
 
         document.getElementById('totalOrders').textContent = this.orders.length;

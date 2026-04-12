@@ -118,40 +118,32 @@ const Storage = {
 
     // ===== REVENUE (Chiffre d'Affaires) — computed from actual orders =====
     getRevenue() {
-        // Compute from today's orders for accuracy (no drift)
-        // Always includes deleted orders — money was received even if order was removed from admin
-        const todayOrders = this.getTodayOrdersForRevenue();
+        const todayOrders = this.getTodayOrders();
         return todayOrders.reduce((sum, o) => sum + (o.total || 0), 0);
     },
 
     addRevenue(amount) {
-        // Revenue is now computed from orders, so just sync the new total
         const newTotal = this.getRevenue();
         this._set('crispi_revenue', newTotal);
         this._syncRevenueToSupabase(newTotal);
         return newTotal;
     },
 
-    // Get all orders from today (since last 7 AM reset) — includes deleted for accurate revenue
-    getTodayOrders(includeDeleted) {
+    // Get today's non-deleted orders (since last 7 AM reset)
+    getTodayOrders() {
         const orders = this._get('crispi_orders') || [];
         const resetDate = localStorage.getItem('crispi_last_revenue_reset') || new Date().toISOString().split('T')[0];
         return orders.filter(o => {
             if (!o.timestamp) return false;
-            if (!includeDeleted && o.deleted) return false;
+            if (o.deleted) return false;
             const oDay = o.timestamp.split('T')[0];
             return oDay >= resetDate;
         });
     },
 
-    // Get today's orders for revenue — always includes deleted orders so revenue stays accurate
-    getTodayOrdersForRevenue() {
-        return this.getTodayOrders(true);
-    },
-
-    // Get product breakdown for today (includes deleted orders for full accuracy)
+    // Product breakdown for today (only non-deleted)
     getTodayProductBreakdown() {
-        const todayOrders = this.getTodayOrders(true);
+        const todayOrders = this.getTodayOrders();
         const products = {};
         for (const order of todayOrders) {
             for (const item of order.items) {

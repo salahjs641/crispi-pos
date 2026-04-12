@@ -49,8 +49,12 @@ const App = {
         // Update tables badge
         Tables.updateBadge();
 
-        // Display revenue
+        // Display revenue (computed from actual orders)
         this.updateRevenue(Storage.getRevenue());
+
+        // Daily summary modal on chiffre d'affaires click
+        document.getElementById('chiffreAffairesBtn').addEventListener('click', () => this.openDailySummary());
+        document.getElementById('dailySummaryClose').addEventListener('click', () => this.closeModal('dailySummaryModal'));
 
         // Modal close buttons
         document.querySelectorAll('[data-close]').forEach(btn => {
@@ -144,39 +148,34 @@ const App = {
 
         // Only reset if it's 7 AM or later (and we haven't reset today yet)
         if (now.getHours() >= 7) {
-            const currentRevenue = Storage.getRevenue();
+            // Compute previous day's revenue from orders
+            const orders = JSON.parse(localStorage.getItem('crispi_orders') || '[]');
+            const prevDayOrders = lastResetDate
+                ? orders.filter(o => {
+                    if (!o.timestamp) return false;
+                    const oDay = o.timestamp.split('T')[0];
+                    return oDay >= lastResetDate && oDay < today;
+                })
+                : [];
+            const prevRevenue = prevDayOrders.reduce((sum, o) => sum + (o.total || 0), 0);
 
-            // Figure out which "business day" this revenue belongs to
-            // If last reset was yesterday or earlier, save that day's revenue
-            if (currentRevenue > 0 || lastResetDate) {
-                // Count orders for the previous business day
-                const orders = JSON.parse(localStorage.getItem('crispi_orders') || '[]');
-                const prevDayOrders = lastResetDate
-                    ? orders.filter(o => {
-                        const oDate = new Date(o.timestamp);
-                        const oDay = oDate.toISOString().split('T')[0];
-                        return oDay >= lastResetDate && oDay < today;
-                    })
-                    : [];
-
-                // Save daily log for previous business day
-                if (lastResetDate && currentRevenue > 0) {
-                    Storage.saveDailyRevenueLog({
-                        date: lastResetDate,
-                        total: currentRevenue,
-                        orderCount: prevDayOrders.length,
-                        closedAt: now.toISOString()
-                    });
-                }
+            // Save daily log for previous business day
+            if (lastResetDate && prevRevenue > 0) {
+                Storage.saveDailyRevenueLog({
+                    date: lastResetDate,
+                    total: prevRevenue,
+                    orderCount: prevDayOrders.length,
+                    closedAt: now.toISOString()
+                });
             }
 
-            // Reset revenue to 0
+            // Set reset date to today — revenue auto-computes from orders >= today
+            localStorage.setItem('crispi_last_revenue_reset', today);
             localStorage.setItem('crispi_revenue', JSON.stringify(0));
             Storage._syncRevenueToSupabase(0);
-            localStorage.setItem('crispi_last_revenue_reset', today);
 
             // Update display
-            this.updateRevenue(0);
+            this.updateRevenue(Storage.getRevenue());
             console.log('Daily revenue reset at 7 AM —', today);
         }
     },
@@ -188,6 +187,54 @@ const App = {
             maximumFractionDigits: 2
         });
         document.getElementById('chiffreAffaires').textContent = formatted + ' DH';
+    },
+
+    // ===== DAILY SUMMARY =====
+    openDailySummary() {
+        const todayOrders = Storage.getTodayOrders();
+        const revenue = todayOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+        const orderCount = todayOrders.length;
+        const products = Storage.getTodayProductBreakdown();
+
+        const now = new Date();
+        const dateStr = now.toLocaleDateString('fr-FR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+
+        document.getElementById('dailySummaryTitle').textContent = 'Résumé du Jour';
+
+        let productsHTML = '';
+        if (products.length > 0) {
+            productsHTML = products.map(p => `
+                <div class="ds-product-row">
+                    <span class="ds-product-qty">${p.qty}x</span>
+                    <span class="ds-product-name">${p.name}</span>
+                    <span class="ds-product-total">${p.total.toFixed(2)} DH</span>
+                </div>
+            `).join('');
+        } else {
+            productsHTML = '<div class="ds-empty">Aucune commande aujourd\'hui</div>';
+        }
+
+        document.getElementById('dailySummaryBody').innerHTML = `
+            <div class="ds-date">${dateStr}</div>
+            <div class="ds-stats">
+                <div class="ds-stat-card ds-stat-revenue">
+                    <div class="ds-stat-label">Chiffre d'Affaires</div>
+                    <div class="ds-stat-value">${revenue.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} DH</div>
+                </div>
+                <div class="ds-stat-card ds-stat-orders">
+                    <div class="ds-stat-label">Commandes</div>
+                    <div class="ds-stat-value">${orderCount}</div>
+                </div>
+            </div>
+            <div class="ds-products-section">
+                <div class="ds-products-header">Produits vendus</div>
+                <div class="ds-products-list">
+                    ${productsHTML}
+                </div>
+            </div>
+        `;
+
+        this.openModal('dailySummaryModal');
     },
 
     // ===== MODAL MANAGEMENT =====

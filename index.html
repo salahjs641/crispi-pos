@@ -19,7 +19,7 @@
             <h1 class="logo">Crispi</h1>
         </div>
         <div class="top-bar-center">
-            <div class="chiffre-affaires">
+            <div class="chiffre-affaires" id="chiffreAffairesBtn" style="cursor:pointer" title="Voir le résumé du jour">
                 <span class="ca-label">CHIFFRE D'AFFAIRES:</span>
                 <span class="ca-value" id="chiffreAffaires">0.00 DH</span>
             </div>
@@ -404,6 +404,22 @@
             </div>
             <div class="form-actions" style="padding:0 20px 20px">
                 <button class="btn btn-validate" id="printerSave">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- DAILY SUMMARY MODAL -->
+    <div class="modal-overlay" id="dailySummaryModal">
+        <div class="modal daily-summary-modal">
+            <div class="modal-header">
+                <h3 id="dailySummaryTitle">Résumé du Jour</h3>
+                <button class="btn-close" data-close="dailySummaryModal">&times;</button>
+            </div>
+            <div class="daily-summary-body" id="dailySummaryBody">
+                <!-- Filled by JS -->
+            </div>
+            <div class="form-actions" style="padding:0 20px 20px">
+                <button class="btn btn-validate" id="dailySummaryClose">Fermer</button>
             </div>
         </div>
     </div>

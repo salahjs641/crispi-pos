@@ -61,9 +61,10 @@ const Log = {
 
     // ===== STATS =====
     renderStats() {
-        const revenue = Storage.getRevenue();
-        const today = new Date().toISOString().split('T')[0];
-        const todayCount = this.orders.filter(o => o.timestamp && o.timestamp.startsWith(today)).length;
+        // Compute revenue from actual today's orders (no drift)
+        const todayOrders = Storage.getTodayOrders();
+        const revenue = todayOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+        const todayCount = todayOrders.length;
 
         document.getElementById('totalOrders').textContent = this.orders.length;
         document.getElementById('todayOrders').textContent = todayCount;

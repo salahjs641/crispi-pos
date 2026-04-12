@@ -116,17 +116,48 @@ const Storage = {
         this.saveProducts(products);
     },
 
-    // ===== REVENUE (Chiffre d'Affaires) =====
+    // ===== REVENUE (Chiffre d'Affaires) — computed from actual orders =====
     getRevenue() {
-        return this._get('crispi_revenue') || 0;
+        // Compute from today's orders for accuracy (no drift)
+        const todayOrders = this.getTodayOrders();
+        return todayOrders.reduce((sum, o) => sum + (o.total || 0), 0);
     },
 
     addRevenue(amount) {
-        const current = this.getRevenue();
-        const newTotal = current + amount;
+        // Revenue is now computed from orders, so just sync the new total
+        const newTotal = this.getRevenue();
         this._set('crispi_revenue', newTotal);
         this._syncRevenueToSupabase(newTotal);
         return newTotal;
+    },
+
+    // Get all orders from today (since last 7 AM reset)
+    getTodayOrders() {
+        const orders = this._get('crispi_orders') || [];
+        const resetDate = localStorage.getItem('crispi_last_revenue_reset') || new Date().toISOString().split('T')[0];
+        return orders.filter(o => {
+            if (!o.timestamp) return false;
+            const oDay = o.timestamp.split('T')[0];
+            return oDay >= resetDate;
+        });
+    },
+
+    // Get product breakdown for today
+    getTodayProductBreakdown() {
+        const todayOrders = this.getTodayOrders();
+        const products = {};
+        for (const order of todayOrders) {
+            for (const item of order.items) {
+                const key = item.name;
+                if (!products[key]) {
+                    products[key] = { name: item.name, qty: 0, total: 0, price: item.price };
+                }
+                products[key].qty += item.quantity;
+                products[key].total += item.price * item.quantity;
+            }
+        }
+        // Sort by total descending
+        return Object.values(products).sort((a, b) => b.total - a.total);
     },
 
     // ===== DAILY REVENUE LOG =====

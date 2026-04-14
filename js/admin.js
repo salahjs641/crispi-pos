@@ -136,9 +136,9 @@ const Admin = {
         });
 
         document.getElementById('btnFilterToday').addEventListener('click', () => {
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('filterDate').value = today;
-            this.filterByDate(today);
+            const businessDay = localStorage.getItem('crispi_last_revenue_reset') || new Date().toISOString().split('T')[0];
+            document.getElementById('filterDate').value = businessDay;
+            this.filterByDate(businessDay);
         });
 
         document.getElementById('btnFilterAll').addEventListener('click', () => {
@@ -154,8 +154,8 @@ const Admin = {
 
         // Daily report
         document.getElementById('btnReportToday').addEventListener('click', () => {
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('reportDate').value = today;
+            const businessDay = localStorage.getItem('crispi_last_revenue_reset') || new Date().toISOString().split('T')[0];
+            document.getElementById('reportDate').value = businessDay;
         });
 
         document.getElementById('btnPrintDailyReport').addEventListener('click', () => {
@@ -204,7 +204,15 @@ const Admin = {
         if (!dateStr) {
             this.filteredOrders = [...this.orders];
         } else {
-            this.filteredOrders = this.orders.filter(o => o.timestamp && o.timestamp.startsWith(dateStr));
+            // Business day: 7 AM to next day 7 AM
+            const bdStart = new Date(dateStr + 'T07:00:00');
+            const bdEnd = new Date(bdStart);
+            bdEnd.setDate(bdEnd.getDate() + 1);
+            this.filteredOrders = this.orders.filter(o => {
+                if (!o.timestamp) return false;
+                const t = new Date(o.timestamp);
+                return t >= bdStart && t < bdEnd;
+            });
         }
         this.renderTable();
     },
@@ -463,8 +471,15 @@ const Admin = {
             return;
         }
 
-        // Get orders for that date
-        const dayOrders = this.orders.filter(o => o.timestamp && o.timestamp.startsWith(reportDate));
+        // Get orders for that business day (7 AM to next day 7 AM)
+        const bdStart = new Date(reportDate + 'T07:00:00');
+        const bdEnd = new Date(bdStart);
+        bdEnd.setDate(bdEnd.getDate() + 1);
+        const dayOrders = this.orders.filter(o => {
+            if (!o.timestamp) return false;
+            const t = new Date(o.timestamp);
+            return t >= bdStart && t < bdEnd;
+        });
         const dayTotal = dayOrders.reduce((sum, o) => sum + o.total, 0);
 
         // Format date

@@ -512,22 +512,41 @@ const Admin = {
             `<tr><td>${type}</td><td style="text-align:center">${data.count}</td><td style="text-align:right">${data.total.toFixed(2)} DH</td></tr>`
         ).join('');
 
-        // Top products
+        // All products — start with every menu item at 0
+        const allProducts = Storage.getProducts();
         const productMap = {};
+        for (const p of allProducts) {
+            productMap[p.name] = { qty: 0, total: 0, category: p.category, position: p.position || 0 };
+        }
         dayOrders.forEach(o => {
             o.items.forEach(item => {
-                if (!productMap[item.name]) productMap[item.name] = { qty: 0, total: 0 };
+                if (!productMap[item.name]) productMap[item.name] = { qty: 0, total: 0, category: 'other', position: 999 };
                 productMap[item.name].qty += item.quantity;
                 productMap[item.name].total += item.quantity * item.price;
             });
         });
-        const topProducts = Object.entries(productMap)
-            .sort((a, b) => b[1].qty - a[1].qty)
-            .slice(0, 10);
 
-        const productRows = topProducts.map(([name, data]) =>
-            `<tr><td>${data.qty}x</td><td>${name}</td><td style="text-align:right">${data.total.toFixed(2)} DH</td></tr>`
-        ).join('');
+        // Group by category
+        const catOrder = CATEGORIES.map(c => c.id);
+        const catNames = {};
+        CATEGORIES.forEach(c => { catNames[c.id] = c.name; });
+        const sortedProducts = Object.entries(productMap).sort((a, b) => {
+            const ci = catOrder.indexOf(a[1].category) - catOrder.indexOf(b[1].category);
+            if (ci !== 0) return ci;
+            return a[1].position - b[1].position;
+        });
+
+        let productRows = '';
+        let currentCat = null;
+        for (const [name, data] of sortedProducts) {
+            if (data.category !== currentCat) {
+                currentCat = data.category;
+                productRows += `<tr><td colspan="3" style="font-weight:bold;padding-top:3mm;font-size:10px;text-transform:uppercase;color:#555;">${catNames[currentCat] || currentCat}</td></tr>`;
+            }
+            const qtyText = data.qty === 0 ? '0' : data.qty + 'x';
+            const dimStyle = data.qty === 0 ? ' style="color:#aaa;"' : '';
+            productRows += `<tr${dimStyle}><td>${qtyText}</td><td>${name}</td><td style="text-align:right">${data.total.toFixed(2)} DH</td></tr>`;
+        }
 
         // Build receipt
         document.getElementById('receipt').innerHTML = `
@@ -570,15 +589,13 @@ const Admin = {
             <hr class="receipt-separator">
             ` : ''}
 
-            ${productRows ? `
             <div style="margin:2mm 0;font-size:11px;">
-                <strong>TOP PRODUITS:</strong>
+                <strong>TOUS LES PRODUITS:</strong>
                 <table class="receipt-items" style="margin-top:2mm;">
                     ${productRows}
                 </table>
             </div>
             <hr class="receipt-separator">
-            ` : ''}
 
             <div style="text-align:center;margin:3mm 0;font-size:10px;color:#555;">
                 Imprime le ${new Date().toLocaleDateString('fr-FR')} a ${new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}

@@ -1447,7 +1447,7 @@ html, body {
 
 .receipt-header p {
     font-size: 10px;
-    color: #555;
+    color: #000;
 }
 
 .receipt-separator {
@@ -2195,6 +2195,7 @@ html, body {
 
     .receipt * {
         font-weight: bold !important;
+        color: #000 !important;
     }
 
     @page {

@@ -414,7 +414,7 @@ const Admin = {
         const kitchenRows = order.items.map(item => `
             <tr>
                 <td class="item-qty">${item.quantity}x</td>
-                <td class="item-name"><strong>${item.name}</strong>${item.note ? `<br><span style="color:#666;font-size:10px">** ${item.note} **</span>` : ''}</td>
+                <td class="item-name"><strong>${item.name}</strong>${item.note ? `<br><span style="color:#000;font-size:10px">** ${item.note} **</span>` : ''}</td>
                 <td class="item-price">${(item.quantity * item.price).toFixed(2)}</td>
             </tr>
         `).join('');
@@ -442,7 +442,7 @@ const Admin = {
             <table class="receipt-items">${kitchenRows}</table>
             <div class="receipt-total">TOTAL: ${order.total.toFixed(2)} DH</div>
             <hr class="receipt-separator">
-            <div style="border-top:2px dashed #000;margin:6mm 0;text-align:center;font-size:9px;color:#999">--- couper ici ---</div>
+            <div style="border-top:2px dashed #000;margin:6mm 0;text-align:center;font-size:9px;color:#000">--- couper ici ---</div>
             <div class="receipt-header">
                 <h2>CRISPI</h2><p>Restaurant</p><p>Tel: 06 04 08 49 17</p>
             </div>
@@ -541,10 +541,10 @@ const Admin = {
         for (const [name, data] of sortedProducts) {
             if (data.category !== currentCat) {
                 currentCat = data.category;
-                productRows += `<tr><td colspan="3" style="font-weight:bold;padding-top:3mm;font-size:10px;text-transform:uppercase;color:#555;">${catNames[currentCat] || currentCat}</td></tr>`;
+                productRows += `<tr><td colspan="3" style="font-weight:bold;padding-top:3mm;font-size:10px;text-transform:uppercase;color:#000;">${catNames[currentCat] || currentCat}</td></tr>`;
             }
             const qtyText = data.qty === 0 ? '0' : data.qty + 'x';
-            const dimStyle = data.qty === 0 ? ' style="color:#aaa;"' : '';
+            const dimStyle = data.qty === 0 ? ' style="color:#000;"' : '';
             productRows += `<tr${dimStyle}><td>${qtyText}</td><td>${name}</td><td style="text-align:right">${data.total.toFixed(2)} DH</td></tr>`;
         }
 
@@ -561,7 +561,7 @@ const Admin = {
             <hr class="receipt-separator">
 
             <div style="text-align:center;margin:4mm 0;">
-                <div style="font-size:10px;color:#555;">CHIFFRE D'AFFAIRES</div>
+                <div style="font-size:10px;color:#000;">CHIFFRE D'AFFAIRES</div>
                 <div style="font-size:22px;font-weight:bold;margin:2mm 0;">${dayTotal.toFixed(2)} DH</div>
                 <div style="font-size:11px;">${dayOrders.length} commande${dayOrders.length > 1 ? 's' : ''}</div>
             </div>
@@ -597,7 +597,7 @@ const Admin = {
             </div>
             <hr class="receipt-separator">
 
-            <div style="text-align:center;margin:3mm 0;font-size:10px;color:#555;">
+            <div style="text-align:center;margin:3mm 0;font-size:10px;color:#000;">
                 Imprime le ${new Date().toLocaleDateString('fr-FR')} a ${new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
             </div>
         `;

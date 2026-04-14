@@ -62,7 +62,13 @@ const Admin = {
     },
 
     // ===== LOAD PANEL =====
-    loadPanel() {
+    async loadPanel() {
+        // Initialize Supabase + sync (same as main app)
+        await Storage.initSupabase();
+        if (Storage.isOnline()) {
+            await Storage.syncFromSupabase();
+        }
+
         this.loadOrders();
         this.filteredOrders = [...this.orders];
         this.renderStats();
@@ -309,10 +315,14 @@ const Admin = {
         // Soft-delete in Supabase
         Storage.softDeleteOrder(order.id);
 
-        // Mark as deleted locally (keep in array for accurate revenue)
-        order.deleted = true;
-        order.deletedAt = new Date().toISOString();
-        localStorage.setItem('crispi_orders', JSON.stringify(this.orders));
+        // Mark as deleted in the FULL orders array (not just visible ones)
+        const allOrders = JSON.parse(localStorage.getItem('crispi_orders') || '[]');
+        const target = allOrders.find(o => o.id === this.deleteTargetId);
+        if (target) {
+            target.deleted = true;
+            target.deletedAt = new Date().toISOString();
+        }
+        localStorage.setItem('crispi_orders', JSON.stringify(allOrders));
 
         // Revenue is computed from orders (including deleted) — no manual subtraction needed
 

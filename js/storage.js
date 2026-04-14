@@ -141,22 +141,36 @@ const Storage = {
         });
     },
 
-    // Product breakdown for today (only non-deleted)
+    // Product breakdown for today — ALL menu products, even unsold ones
     getTodayProductBreakdown() {
+        const allProducts = this.getProducts();
         const todayOrders = this.getTodayOrders();
+
+        // Start with every product at 0
         const products = {};
+        for (const p of allProducts) {
+            products[p.name] = { name: p.name, qty: 0, total: 0, price: p.price, category: p.category, position: p.position || 0 };
+        }
+
+        // Fill in actual sales
         for (const order of todayOrders) {
             for (const item of order.items) {
                 const key = item.name;
                 if (!products[key]) {
-                    products[key] = { name: item.name, qty: 0, total: 0, price: item.price };
+                    products[key] = { name: item.name, qty: 0, total: 0, price: item.price, category: 'other', position: 999 };
                 }
                 products[key].qty += item.quantity;
                 products[key].total += item.price * item.quantity;
             }
         }
-        // Sort by total descending
-        return Object.values(products).sort((a, b) => b.total - a.total);
+
+        // Sort by category then position
+        const catOrder = CATEGORIES.map(c => c.id);
+        return Object.values(products).sort((a, b) => {
+            const ci = catOrder.indexOf(a.category) - catOrder.indexOf(b.category);
+            if (ci !== 0) return ci;
+            return a.position - b.position;
+        });
     },
 
     // ===== DAILY REVENUE LOG =====

@@ -201,17 +201,24 @@ const App = {
 
         document.getElementById('dailySummaryTitle').textContent = 'Résumé du Jour';
 
+        // Group products by category
+        const catNames = {};
+        CATEGORIES.forEach(c => { catNames[c.id] = c.name; });
+
         let productsHTML = '';
-        if (products.length > 0) {
-            productsHTML = products.map(p => `
-                <div class="ds-product-row">
-                    <span class="ds-product-qty">${p.qty}x</span>
+        let currentCat = null;
+        for (const p of products) {
+            if (p.category !== currentCat) {
+                currentCat = p.category;
+                productsHTML += `<div class="ds-category-header">${catNames[currentCat] || currentCat}</div>`;
+            }
+            const dimClass = p.qty === 0 ? ' ds-product-zero' : '';
+            productsHTML += `
+                <div class="ds-product-row${dimClass}">
+                    <span class="ds-product-qty">${p.qty === 0 ? '0' : p.qty + 'x'}</span>
                     <span class="ds-product-name">${p.name}</span>
                     <span class="ds-product-total">${p.total.toFixed(2)} DH</span>
-                </div>
-            `).join('');
-        } else {
-            productsHTML = '<div class="ds-empty">Aucune commande aujourd\'hui</div>';
+                </div>`;
         }
 
         document.getElementById('dailySummaryBody').innerHTML = `
@@ -227,7 +234,7 @@ const App = {
                 </div>
             </div>
             <div class="ds-products-section">
-                <div class="ds-products-header">Produits vendus</div>
+                <div class="ds-products-header">Tous les Produits</div>
                 <div class="ds-products-list">
                     ${productsHTML}
                 </div>

@@ -196,8 +196,10 @@ const App = {
         const orderCount = todayOrders.length;
         const products = Storage.getTodayProductBreakdown();
 
-        const now = new Date();
-        const dateStr = now.toLocaleDateString('fr-FR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+        // Show the business day (reset date), not the calendar date
+        const businessDay = localStorage.getItem('crispi_last_revenue_reset') || new Date().toISOString().split('T')[0];
+        const businessDate = new Date(businessDay + 'T12:00:00');
+        const dateStr = businessDate.toLocaleDateString('fr-FR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
 
         document.getElementById('dailySummaryTitle').textContent = 'Résumé du Jour';
 

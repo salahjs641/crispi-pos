@@ -191,11 +191,12 @@ html, body {
 
 .product-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: 14px;
-    padding: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+    gap: 12px;
+    padding: 16px;
     overflow-y: auto;
     flex: 1;
+    align-content: start;
 }
 
 .product-grid::-webkit-scrollbar {
@@ -212,75 +213,106 @@ html, body {
 }
 
 .product-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 12px;
+    background: linear-gradient(160deg, #1e2f52 0%, #162040 100%);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 16px;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: stretch;
     text-align: center;
-    gap: 8px;
     position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+    height: 190px;
 }
 
 .product-card:hover {
-    transform: translateY(-2px);
+    transform: translateY(-5px);
     border-color: var(--accent);
-    box-shadow: 0 4px 20px rgba(226,183,20,0.15);
+    box-shadow: 0 12px 36px rgba(226, 183, 20, 0.2), 0 4px 16px rgba(0,0,0,0.4);
 }
 
 .product-card:active {
-    transform: scale(0.97);
+    transform: translateY(-2px) scale(0.98);
 }
 
+/* Image area — top 60% of card */
 .product-card img {
-    width: 80px;
-    height: 80px;
-    border-radius: var(--radius-sm);
-    object-fit: cover;
-    background: var(--bg-surface);
+    width: 100%;
+    height: 118px;
+    object-fit: contain;
+    background: radial-gradient(ellipse at center, #253450 0%, #18243d 100%);
+    padding: 10px;
+    box-sizing: border-box;
+    transition: transform 0.3s ease;
+    display: block;
+    flex-shrink: 0;
 }
 
+.product-card:hover img {
+    transform: scale(1.06);
+}
+
+/* Info strip — bottom of card */
 .product-card .product-name {
     font-size: 12px;
     font-weight: 600;
     color: var(--text-primary);
-    line-height: 1.3;
-    min-height: 32px;
+    line-height: 1.25;
+    padding: 6px 10px 2px;
+    text-align: center;
+    flex: 1;
     display: flex;
     align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.18);
+    border-top: 1px solid rgba(255,255,255,0.06);
 }
 
 .product-card .product-desc {
-    font-size: 10px;
+    font-size: 9px;
     color: var(--text-secondary);
-    line-height: 1.3;
-    opacity: 0.75;
+    line-height: 1.2;
+    padding: 0 10px;
+    opacity: 0.7;
+    background: rgba(0,0,0,0.18);
 }
 
 .product-card .product-price {
-    font-size: 16px;
-    font-weight: 700;
+    font-size: 14px;
+    font-weight: 800;
     color: var(--accent);
+    padding: 4px 10px 8px;
+    background: rgba(0,0,0,0.18);
+    letter-spacing: 0.5px;
 }
 
 .product-card .edit-badge {
     position: absolute;
-    top: 6px;
-    right: 6px;
-    width: 24px;
-    height: 24px;
+    top: 7px;
+    right: 7px;
+    width: 26px;
+    height: 26px;
     border-radius: 50%;
-    background: rgba(0,0,0,0.5);
-    color: var(--text-secondary);
-    font-size: 12px;
+    background: rgba(0,0,0,0.65);
+    backdrop-filter: blur(4px);
+    color: #fff;
+    font-size: 13px;
     display: none;
     align-items: center;
     justify-content: center;
     cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    z-index: 5;
+    border: 1px solid rgba(255,255,255,0.15);
+    transition: background 0.15s;
+}
+
+.product-card .edit-badge:hover {
+    background: rgba(226,183,20,0.8);
+    color: #111;
 }
 
 .product-card:hover .edit-badge {
@@ -1273,7 +1305,7 @@ html, body {
     }
 
     .product-grid {
-        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
     }
 }
 
@@ -1302,9 +1334,12 @@ html, body {
         padding: 10px;
     }
 
+    .product-card {
+        height: 160px;
+    }
+
     .product-card img {
-        width: 60px;
-        height: 60px;
+        height: 90px;
     }
 
     .product-card .product-name {

@@ -11,6 +11,7 @@ const PLACEHOLDER_IMG = 'data:image/svg+xml,' + encodeURIComponent(
 const CATEGORIES = [
     { id: 'chawarma', name: 'Chawarma' },
     { id: 'poulet', name: 'Poulet Croustillant' },
+    { id: 'kefta-mix', name: 'Kefta & Mix' },
     { id: 'petit-dejeuner', name: 'Petit Dejeuner' },
     { id: 'boissons', name: 'Boissons' }
 ];
@@ -27,6 +28,14 @@ const DEFAULT_PRODUCTS = [
     { id: 'cw-08', name: 'Chawarma Du Bled', price: 45, category: 'chawarma', image: 'img/products/cw-08.jpeg', position: 8 },
     { id: 'cw-09', name: 'Chawarma Arabe', price: 35, category: 'chawarma', image: 'img/products/cw-09.jpeg', position: 9 },
     { id: 'cw-10', name: 'Plat Chawarma', price: 40, category: 'chawarma', image: 'img/products/cw-10.jpeg', position: 10 },
+    { id: 'cw-11', name: 'Kebsa Chawarma', price: 35, category: 'chawarma', image: 'img/products/Kebsa chawarma.PNG', position: 11 },
+
+    // === KEFTA & MIX ===
+    { id: 'km-01', name: 'Sandwich Kefta', price: 20, category: 'kefta-mix', image: 'img/products/Sandwich kefta.PNG', position: 1 },
+    { id: 'km-02', name: 'Tacos Kefta', price: 25, category: 'kefta-mix', image: 'img/products/Tacos kefta.PNG', position: 2 },
+    { id: 'km-03', name: 'Sandwich Mix', price: 25, category: 'kefta-mix', image: 'img/products/Sandwich mix.PNG', position: 3 },
+    { id: 'km-04', name: 'Tacos Mix', price: 30, category: 'kefta-mix', image: 'img/products/Tacos mix.PNG', position: 4 },
+    { id: 'km-05', name: 'Cheese Burger', price: 25, category: 'kefta-mix', image: 'img/products/Cheese burger.PNG', position: 5 },
 
     // === POULET CROUSTILLANT ===
     { id: 'pk-01', name: 'Chicken Khliza (sans frites)', price: 13, category: 'poulet', image: 'img/products/pk-01.jpeg', position: 1 },
@@ -39,6 +48,7 @@ const DEFAULT_PRODUCTS = [
     { id: 'pk-08', name: 'Chicken Box', price: 30, category: 'poulet', image: 'img/products/pk-08.jpeg', position: 8 },
     { id: 'pk-09', name: 'Big Chicken Box', price: 45, category: 'poulet', image: 'img/products/pk-09.jpeg', position: 9 },
     { id: 'pk-10', name: 'Plat Chicken', price: 30, category: 'poulet', image: 'img/products/pk-10.jpeg', position: 10 },
+    { id: 'pk-11', name: 'Kebesa Crispy', price: 35, category: 'poulet', image: 'img/products/Kebesa Crispy.PNG', position: 11 },
 
     // === PETIT DEJEUNER — Omelettes ===
     { id: 'om-01', name: 'Omelette Normal', price: 10, category: 'petit-dejeuner', image: 'img/products/om-01.jpg', position: 1 },

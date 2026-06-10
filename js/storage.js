@@ -68,7 +68,7 @@ const Storage = {
         const defaultMap = {};
         DEFAULT_PRODUCTS.forEach(p => { defaultMap[p.id] = p; });
 
-        return stored.map(p => {
+        const processed = stored.map(p => {
             // For default products, always use the correct file path, category and description
             if (defaultMap[p.id]) {
                 p.image = defaultMap[p.id].image;
@@ -76,18 +76,28 @@ const Storage = {
                 p.name = defaultMap[p.id].name;
                 if (defaultMap[p.id].description) p.description = defaultMap[p.id].description;
             }
-            // For custom products with old ftour categories, migrate to petit-dejeuner
-            const oldFtourCats = ['omlet', 'ftour-beldi', 'ftour-fassi', 'ftour-chamali', 'ftour-express'];
-            if (oldFtourCats.includes(p.category)) {
-                p.category = 'petit-dejeuner';
-            }
-            // For custom products, fallback to placeholder if image is missing
-            if (!p.image || p.image === '' || p.image === 'undefined' || p.image === 'null') {
-                p.image = PLACEHOLDER_IMG;
-            }
-            return p;
-        });
-    },
+        // For custom products with old ftour categories, migrate to petit-dejeuner
+        const oldFtourCats = ['omlet', 'ftour-beldi', 'ftour-fassi', 'ftour-chamali', 'ftour-express'];
+        if (oldFtourCats.includes(p.category)) {
+            p.category = 'petit-dejeuner';
+        }
+        // For custom products, fallback to placeholder if image is missing
+        if (!p.image || p.image === '' || p.image === 'undefined' || p.image === 'null') {
+            p.image = PLACEHOLDER_IMG;
+        }
+        return p;
+    });
+
+    // Add any new default products that are not currently in stored products
+    const storedIds = new Set(processed.map(p => p.id));
+    DEFAULT_PRODUCTS.forEach(dp => {
+        if (!storedIds.has(dp.id)) {
+            processed.push({ ...dp });
+        }
+    });
+
+    return processed;
+},
 
     saveProducts(products) {
         this._set('crispi_products', products);

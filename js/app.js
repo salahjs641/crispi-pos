@@ -29,7 +29,7 @@ const App = {
         setInterval(() => this.checkDailyReset(), 2 * 60 * 1000);
 
         // Seed products on first run OR reseed when menu version changes
-        const MENU_VERSION = 'v5-price-update';
+        const MENU_VERSION = 'v6-menu-update';
         if (!localStorage.getItem('crispi_products') || localStorage.getItem('crispi_menu_version') !== MENU_VERSION) {
             // Keep any custom products (non-default IDs), replace defaults with fresh data
             const old = JSON.parse(localStorage.getItem('crispi_products') || '[]');

@@ -139,15 +139,25 @@ const Storage = {
         return newTotal;
     },
 
-    // Get today's non-deleted orders (since last 7 AM reset)
+    // Get local date string YYYY-MM-DD (in device's local timezone, NOT UTC)
+    _localDateStr(date) {
+        const d = date || new Date();
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+    },
+
+    // Get today's non-deleted orders (since last reset, using LOCAL date)
     getTodayOrders() {
         const orders = this._get('crispi_orders') || [];
-        const resetDate = localStorage.getItem('crispi_last_revenue_reset') || new Date().toISOString().split('T')[0];
+        const resetDate = localStorage.getItem('crispi_last_revenue_reset') || this._localDateStr();
         return orders.filter(o => {
             if (!o.timestamp) return false;
             if (o.deleted) return false;
-            const oDay = o.timestamp.split('T')[0];
-            return oDay >= resetDate;
+            // Use local date of the order, not UTC
+            const oLocalDate = this._localDateStr(new Date(o.timestamp));
+            return oLocalDate >= resetDate;
         });
     },
 
@@ -473,19 +483,9 @@ const Storage = {
     async syncFromSupabase() {
         if (!this.isOnline()) return;
         try {
-            const { data: revData } = await this._supabase
-                .from('revenue')
-                .select('total')
-                .eq('id', 'main')
-                .single();
-            if (revData) {
-                const localRev = this.getRevenue();
-                const remoteRev = revData.total || 0;
-                if (remoteRev > localRev) {
-                    this._set('crispi_revenue', remoteRev);
-                }
-            }
-
+            // NOTE: Do NOT overwrite local revenue — it is always recomputed
+            // from local orders which are the source of truth.
+            // Only sync products from Supabase.
             const { data: prodData } = await this._supabase
                 .from('products')
                 .select('*')

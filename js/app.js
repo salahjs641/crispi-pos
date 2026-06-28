@@ -137,24 +137,25 @@ const App = {
         this.openModal('printerModal');
     },
 
-    // ===== DAILY REVENUE RESET (7 AM) =====
+    // ===== DAILY REVENUE RESET (7 AM local time) =====
     checkDailyReset() {
         const now = new Date();
-        const today = now.toISOString().split('T')[0]; // YYYY-MM-DD
+        // Use LOCAL date (not UTC) for reset tracking
+        const today = this._localDateStr(now);
         const lastResetDate = localStorage.getItem('crispi_last_revenue_reset') || '';
 
         // If we already reset today, skip
         if (lastResetDate === today) return;
 
-        // Only reset if it's 7 AM or later (and we haven't reset today yet)
+        // Only reset if it's 7 AM or later LOCAL time (and we haven't reset today yet)
         if (now.getHours() >= 7) {
             // Compute previous day's revenue from orders
             const orders = JSON.parse(localStorage.getItem('crispi_orders') || '[]');
             const prevDayOrders = lastResetDate
                 ? orders.filter(o => {
                     if (!o.timestamp) return false;
-                    const oDay = o.timestamp.split('T')[0];
-                    return oDay >= lastResetDate && oDay < today;
+                    const oLocalDate = this._localDateStr(new Date(o.timestamp));
+                    return oLocalDate >= lastResetDate && oLocalDate < today;
                 })
                 : [];
             const prevRevenue = prevDayOrders.reduce((sum, o) => sum + (o.total || 0), 0);
@@ -169,14 +170,14 @@ const App = {
                 });
             }
 
-            // Set reset date to today — revenue auto-computes from orders >= today
+            // Set reset date to today (LOCAL) — revenue auto-computes from orders >= today
             localStorage.setItem('crispi_last_revenue_reset', today);
             localStorage.setItem('crispi_revenue', JSON.stringify(0));
             Storage._syncRevenueToSupabase(0);
 
             // Update display
             this.updateRevenue(Storage.getRevenue());
-            console.log('Daily revenue reset at 7 AM —', today);
+            console.log('Daily revenue reset at 7 AM (local) —', today);
         }
     },
 
@@ -189,9 +190,44 @@ const App = {
         document.getElementById('chiffreAffaires').textContent = formatted + ' DH';
     },
 
+    // ===== REVENUE (Chiffre d'Affaires) — computed from actual orders =====
+    getRevenue() {
+        const todayOrders = this.getTodayOrders();
+        return todayOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+    },
+
+    addRevenue(amount) {
+        const newTotal = this.getRevenue();
+        this._set('crispi_revenue', newTotal);
+        this._syncRevenueToSupabase(newTotal);
+        return newTotal;
+    },
+
+    // Get local date string YYYY-MM-DD (in device's local timezone)
+    _localDateStr(date) {
+        const d = date || new Date();
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+    },
+
+    // Get today's non-deleted orders (since last reset date, using LOCAL date)
+    getTodayOrders() {
+        const orders = JSON.parse(localStorage.getItem('crispi_orders') || '[]');
+        const resetDate = localStorage.getItem('crispi_last_revenue_reset') || this._localDateStr();
+        return orders.filter(o => {
+            if (!o.timestamp) return false;
+            if (o.deleted) return false;
+            // Convert order timestamp to LOCAL date string
+            const oLocalDate = this._localDateStr(new Date(o.timestamp));
+            return oLocalDate >= resetDate;
+        });
+    },
+
     // ===== DAILY SUMMARY =====
     openDailySummary() {
-        const todayOrders = Storage.getTodayOrders();
+        const todayOrders = this.getTodayOrders();
         const revenue = todayOrders.reduce((sum, o) => sum + (o.total || 0), 0);
         const orderCount = todayOrders.length;
         const products = Storage.getTodayProductBreakdown();

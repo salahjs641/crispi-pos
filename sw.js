@@ -1,11 +1,11 @@
 // Service Worker — enables offline mode and PWA install
-const CACHE_NAME = 'crispi-pos-v28';
+const CACHE_NAME = 'crispi-pos-v30';
 
 // Only cache critical app shell assets on install (keep this small!)
 const SHELL_ASSETS = [
     './',
     './index.html',
-    './css/styles.css?v=5',
+    './css/styles.css?v=6',
     './js/supabase-config.js',
     './js/data.js',
     './js/storage.js',

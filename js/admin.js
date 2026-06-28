@@ -170,9 +170,8 @@ const Admin = {
 
         // One-click: set date + immediately print
         document.getElementById('btnCaisseToday').addEventListener('click', () => {
-            const businessDay = localStorage.getItem('crispi_last_revenue_reset') || this.getYesterdayStr();
-            document.getElementById('reportDate').value = businessDay;
-            this.printDailyReport();
+            // Uses EXACTLY the same orders as the CA display on the main screen
+            this.printTodayReport();
         });
 
         document.getElementById('btnCaisseHier').addEventListener('click', () => {
@@ -226,17 +225,23 @@ const Admin = {
         if (!dateStr) {
             this.filteredOrders = [...this.orders];
         } else {
-            // Business day: 7 AM to next day 7 AM
-            const bdStart = new Date(dateStr + 'T07:00:00');
-            const bdEnd = new Date(bdStart);
-            bdEnd.setDate(bdEnd.getDate() + 1);
+            // Match by LOCAL date string (same logic as getTodayOrders in storage.js)
             this.filteredOrders = this.orders.filter(o => {
                 if (!o.timestamp) return false;
-                const t = new Date(o.timestamp);
-                return t >= bdStart && t < bdEnd;
+                const oLocalDate = this._localDateStr(new Date(o.timestamp));
+                return oLocalDate === dateStr;
             });
         }
         this.renderTable();
+    },
+
+    // Get local date string YYYY-MM-DD
+    _localDateStr(date) {
+        const d = date || new Date();
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
     },
 
     filterBySearch(query) {
@@ -485,7 +490,20 @@ const Admin = {
         setTimeout(() => window.print(), 200);
     },
 
-    // ===== PRINT DAILY REPORT =====
+    // ===== PRINT TODAY REPORT (uses EXACT same orders as main screen CA) =====
+    printTodayReport() {
+        // Storage.getTodayOrders() is the ground truth — same as what the CA display shows
+        const todayOrders = Storage.getTodayOrders();
+        const dayTotal = todayOrders.reduce((sum, o) => sum + o.total, 0);
+
+        const resetDate = localStorage.getItem('crispi_last_revenue_reset') || this._localDateStr();
+        const d = new Date(resetDate + 'T12:00:00');
+        const dateStr = d.toLocaleDateString('fr-FR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+
+        this._buildAndPrintReport(todayOrders, dayTotal, dateStr);
+    },
+
+    // ===== PRINT DAILY REPORT (for any date picked in the date picker) =====
     printDailyReport() {
         const reportDate = document.getElementById('reportDate').value;
         if (!reportDate) {
@@ -493,21 +511,22 @@ const Admin = {
             return;
         }
 
-        // Get orders for that business day (7 AM to next day 7 AM)
-        const bdStart = new Date(reportDate + 'T07:00:00');
-        const bdEnd = new Date(bdStart);
-        bdEnd.setDate(bdEnd.getDate() + 1);
-        const dayOrders = this.orders.filter(o => {
-            if (!o.timestamp) return false;
-            const t = new Date(o.timestamp);
-            return t >= bdStart && t < bdEnd;
+        // Filter by LOCAL date string — same logic as getTodayOrders
+        const allOrders = JSON.parse(localStorage.getItem('crispi_orders') || '[]');
+        const dayOrders = allOrders.filter(o => {
+            if (!o.timestamp || o.deleted) return false;
+            return this._localDateStr(new Date(o.timestamp)) === reportDate;
         });
         const dayTotal = dayOrders.reduce((sum, o) => sum + o.total, 0);
 
-        // Format date
         const d = new Date(reportDate + 'T12:00:00');
         const dateStr = d.toLocaleDateString('fr-FR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
 
+        this._buildAndPrintReport(dayOrders, dayTotal, dateStr);
+    },
+
+    // ===== SHARED REPORT BUILDER =====
+    _buildAndPrintReport(dayOrders, dayTotal, dateStr) {
         // Revenue by server
         const byServer = {};
         dayOrders.forEach(o => {

@@ -2,36 +2,25 @@
 
 const App = {
     async init() {
-        // Initialize storage (try Supabase, fallback to localStorage)
-        const online = await Storage.initSupabase();
-
-        // Update status indicator
+        // ── STEP 1: Boot UI immediately from localStorage (zero wait) ──
         const dot = document.getElementById('statusDot');
-        dot.classList.toggle('offline', !online);
-        dot.title = online ? 'En ligne' : 'Hors ligne';
-
-        // Sync from Supabase if online
-        if (online) {
-            await Storage.syncFromSupabase();
-        }
+        dot.classList.add('offline');
+        dot.title = 'Connexion...';
 
         // One-time reset to start clean (2026-04-08)
         if (!localStorage.getItem('crispi_clean_reset_20260408')) {
             localStorage.setItem('crispi_revenue', JSON.stringify(0));
-            localStorage.setItem('crispi_last_revenue_reset', new Date().toISOString().split('T')[0]);
+            localStorage.setItem('crispi_last_revenue_reset', this._localDateStr());
             localStorage.setItem('crispi_clean_reset_20260408', 'done');
-            if (Storage._supabase) Storage._syncRevenueToSupabase(0);
         }
 
-        // Daily revenue reset at 7 AM
+        // Daily revenue reset at 7 AM (local)
         this.checkDailyReset();
-        // Check every 2 minutes for 7 AM reset
         setInterval(() => this.checkDailyReset(), 2 * 60 * 1000);
 
-        // Seed products on first run OR reseed when menu version changes
+        // Seed products
         const MENU_VERSION = 'v6-menu-update';
         if (!localStorage.getItem('crispi_products') || localStorage.getItem('crispi_menu_version') !== MENU_VERSION) {
-            // Keep any custom products (non-default IDs), replace defaults with fresh data
             const old = JSON.parse(localStorage.getItem('crispi_products') || '[]');
             const defaultIds = new Set(DEFAULT_PRODUCTS.map(p => p.id));
             const customProducts = old.filter(p => !defaultIds.has(p.id));
@@ -39,59 +28,54 @@ const App = {
             localStorage.setItem('crispi_menu_version', MENU_VERSION);
         }
 
-        // Initialize modules
+        // Initialize all modules immediately
         Products.init();
         Orders.init();
         Tables.init();
         Calculator.init();
         ProductManager.init();
-
-        // Update tables badge
         Tables.updateBadge();
-
-        // Display revenue (computed from actual orders)
         this.updateRevenue(Storage.getRevenue());
 
-        // Daily summary modal on chiffre d'affaires click
+        // Bind all events
         document.getElementById('chiffreAffairesBtn').addEventListener('click', () => this.openDailySummary());
         document.getElementById('dailySummaryClose').addEventListener('click', () => this.closeModal('dailySummaryModal'));
 
-        // Modal close buttons
         document.querySelectorAll('[data-close]').forEach(btn => {
-            btn.addEventListener('click', () => {
-                this.closeModal(btn.dataset.close);
-            });
+            btn.addEventListener('click', () => this.closeModal(btn.dataset.close));
         });
 
-        // Close modal on overlay click
         document.querySelectorAll('.modal-overlay').forEach(overlay => {
             overlay.addEventListener('click', (e) => {
-                if (e.target === overlay) {
-                    this.closeModal(overlay.id);
-                }
+                if (e.target === overlay) this.closeModal(overlay.id);
             });
         });
 
-        // Keyboard: Escape to close modals
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
-                document.querySelectorAll('.modal-overlay.active').forEach(m => {
-                    this.closeModal(m.id);
-                });
+                document.querySelectorAll('.modal-overlay.active').forEach(m => this.closeModal(m.id));
             }
         });
 
-        // Listen for afterprint to chain the second printer job
         window.addEventListener('afterprint', () => {
-            if (Orders._pendingCaissePrint) {
-                Orders._printCaisseTicket();
-            }
+            if (Orders._pendingCaissePrint) Orders._printCaisseTicket();
         });
 
-        // Printer settings
         this.initPrinterSettings();
 
-        console.log('Crispi POS initialized');
+        // ── STEP 2: Connect Supabase in background (non-blocking) ──
+        Storage.initSupabase().then(online => {
+            dot.classList.toggle('offline', !online);
+            dot.title = online ? 'En ligne' : 'Hors ligne';
+            if (online) {
+                Storage.syncFromSupabase().catch(() => {});
+            }
+        }).catch(() => {
+            dot.classList.add('offline');
+            dot.title = 'Hors ligne';
+        });
+
+        console.log('Crispi POS ready');
     },
 
     // ===== PRINTER SETTINGS =====

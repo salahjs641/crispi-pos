@@ -1,13 +1,11 @@
 // Service Worker — enables offline mode and PWA install
-const CACHE_NAME = 'crispi-pos-v25';
-const ASSETS = [
+const CACHE_NAME = 'crispi-pos-v26';
+
+// Only cache critical app shell assets on install (keep this small!)
+const SHELL_ASSETS = [
     './',
     './index.html',
-    './log.html',
-    './admin.html',
     './css/styles.css',
-    './css/log.css',
-    './css/admin.css',
     './js/supabase-config.js',
     './js/data.js',
     './js/storage.js',
@@ -17,52 +15,13 @@ const ASSETS = [
     './js/calculator.js',
     './js/product-manager.js',
     './js/app.js',
-    './js/log.js',
-    './js/admin.js',
-    './manifest.json',
-    // Product images
-    './img/products/cw-01.jpeg',
-    './img/products/cw-02.jpeg',
-    './img/products/cw-03.jpeg',
-    './img/products/cw-04.jpeg',
-    './img/products/cw-05.jpeg',
-    './img/products/cw-06.jpeg',
-    './img/products/cw-07.jpeg',
-    './img/products/cw-08.jpeg',
-    './img/products/cw-09.jpeg',
-    './img/products/cw-10.jpeg',
-    './img/products/pk-01.jpeg',
-    './img/products/pk-02.jpeg',
-    './img/products/pk-03.jpeg',
-    './img/products/pk-04.jpeg',
-    './img/products/pk-05.jpeg',
-    './img/products/pk-06.jpeg',
-    './img/products/pk-07.jpeg',
-    './img/products/pk-08.jpeg',
-    './img/products/pk-09.jpeg',
-    './img/products/pk-10.jpeg',
-    './img/products/om-01.jpg',
-    './img/products/om-02.jpg',
-    './img/products/om-03.jpg',
-    './img/products/om-04.jpg',
-    './img/products/om-05.jpg',
-    './img/products/fb-01.jpg',
-    './img/products/ff-01.jpg',
-    './img/products/fc-01.jpg',
-    './img/products/bs-01.jpg',
-    './img/products/bs-02.jpg',
-    './img/products/bs-03.jpg',
-    './img/products/bs-04.jpg',
-    './img/products/bs-05.jpg',
-    './img/products/bs-06.jpg',
-    './img/products/bs-07.jpeg',
-    './img/products/bs-08.jpeg'
+    './manifest.json'
 ];
 
-// Install — cache all assets
+// Install — cache ONLY the app shell (fast, no images blocking)
 self.addEventListener('install', (e) => {
     e.waitUntil(
-        caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
+        caches.open(CACHE_NAME).then(cache => cache.addAll(SHELL_ASSETS))
     );
     self.skipWaiting();
 });
@@ -77,12 +36,17 @@ self.addEventListener('activate', (e) => {
     self.clients.claim();
 });
 
-// Fetch — network-first for pages/JS/CSS, cache-first for images
+// Fetch — network-first for JS/CSS/HTML, cache-first for images (lazy cached on first use)
 self.addEventListener('fetch', (e) => {
     const url = new URL(e.request.url);
-    const isAsset = url.pathname.match(/\.(js|css|html)$/) || url.pathname.endsWith('/');
 
-    if (isAsset) {
+    // Skip non-GET and cross-origin requests (e.g. Supabase, Google Fonts)
+    if (e.request.method !== 'GET') return;
+    if (url.origin !== self.location.origin) return;
+
+    const isCodeAsset = url.pathname.match(/\.(js|css|html)$/) || url.pathname.endsWith('/');
+
+    if (isCodeAsset) {
         // Network-first: always get latest code, fallback to cache if offline
         e.respondWith(
             fetch(e.request).then(response => {
@@ -92,9 +56,21 @@ self.addEventListener('fetch', (e) => {
             }).catch(() => caches.match(e.request))
         );
     } else {
-        // Cache-first for images and other assets
+        // Cache-first for images — lazy cache on first fetch
         e.respondWith(
-            caches.match(e.request).then(cached => cached || fetch(e.request))
+            caches.match(e.request).then(cached => {
+                if (cached) return cached;
+                return fetch(e.request).then(response => {
+                    // Only cache successful responses under 5MB
+                    if (response.ok && response.headers.get('content-length') < 5 * 1024 * 1024) {
+                        const clone = response.clone();
+                        caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
+                    }
+                    return response;
+                });
+            })
         );
     }
 });
+
+

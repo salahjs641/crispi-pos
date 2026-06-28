@@ -141,6 +141,12 @@ const Admin = {
             this.filterByDate(businessDay);
         });
 
+        document.getElementById('btnFilterHier').addEventListener('click', () => {
+            const yesterday = this.getYesterdayStr();
+            document.getElementById('filterDate').value = yesterday;
+            this.filterByDate(yesterday);
+        });
+
         document.getElementById('btnFilterAll').addEventListener('click', () => {
             document.getElementById('filterDate').value = '';
             document.getElementById('searchInput').value = '';
@@ -156,6 +162,22 @@ const Admin = {
         document.getElementById('btnReportToday').addEventListener('click', () => {
             const businessDay = localStorage.getItem('crispi_last_revenue_reset') || new Date().toISOString().split('T')[0];
             document.getElementById('reportDate').value = businessDay;
+        });
+
+        document.getElementById('btnReportHier').addEventListener('click', () => {
+            document.getElementById('reportDate').value = this.getYesterdayStr();
+        });
+
+        // One-click: set date + immediately print
+        document.getElementById('btnCaisseToday').addEventListener('click', () => {
+            const businessDay = localStorage.getItem('crispi_last_revenue_reset') || this.getYesterdayStr();
+            document.getElementById('reportDate').value = businessDay;
+            this.printDailyReport();
+        });
+
+        document.getElementById('btnCaisseHier').addEventListener('click', () => {
+            document.getElementById('reportDate').value = this.getYesterdayStr();
+            this.printDailyReport();
         });
 
         document.getElementById('btnPrintDailyReport').addEventListener('click', () => {
@@ -606,6 +628,16 @@ const Admin = {
     },
 
     // ===== UTILITIES =====
+    // Returns yesterday's date as YYYY-MM-DD in local timezone
+    getYesterdayStr() {
+        const d = new Date();
+        d.setDate(d.getDate() - 1);
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+    },
+
     openModal(id) {
         document.getElementById(id).classList.add('active');
     },

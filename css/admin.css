@@ -272,6 +272,36 @@ body {
     background: rgba(226,183,20,0.1);
 }
 
+.btn-hier {
+    border-color: #f59e0b;
+    color: #f59e0b;
+    background: rgba(245,158,11,0.08);
+}
+.btn-hier:hover {
+    background: rgba(245,158,11,0.2);
+}
+
+.btn-caisse-today {
+    padding: 10px 22px;
+    font-size: 13px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #16a34a, #15803d);
+    border: none;
+    border-radius: var(--radius-sm);
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 2px 8px rgba(22,163,74,0.35);
+    transition: all 0.2s;
+}
+.btn-caisse-today:hover {
+    background: linear-gradient(135deg, #15803d, #166534);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(22,163,74,0.45);
+}
+
 /* ===== ORDERS TABLE ===== */
 .admin-table-wrapper {
     background: var(--bg-surface);
